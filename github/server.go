@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/interstellar/testbot/log"
+	"github.com/wepogo/testbot/log"
 )
 
 // Hook returns a handler that verifies

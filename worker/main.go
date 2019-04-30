@@ -25,10 +25,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -40,27 +42,32 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	s3pkg "github.com/aws/aws-sdk-go/service/s3"
+	"golang.org/x/xerrors"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 
-	chaws "i10r.io/config/aws"
-	"i10r.io/env"
-	"i10r.io/errors"
-	"i10r.io/log"
-	"i10r.io/testbot"
-	"i10r.io/trace"
+	"github.com/wepogo/testbot"
+	"github.com/wepogo/testbot/log"
+	"github.com/wepogo/testbot/trace"
 )
 
 // We have some jobs that actually take over 45s to run,
 // so this is about as tight as we can make it right now.
 const jobTimeout = 3 * time.Minute
 
+func or(v, d string) string {
+	if v == "" {
+		v = d
+	}
+	return v
+}
+
 var (
 	boxID       = randID()
 	hostname, _ = os.Hostname()
-	org         = env.String("GITHUB_ORG", "interstellar")
-	repo        = env.String("GITHUB_REPO", "i10r")
+	org         = or(os.Getenv("GITHUB_ORG"), "wepogo")
+	repo        = or(os.Getenv("GITHUB_REPO"), "pogo")
 	repoURL     = "https://github.com/" + org + "/" + repo + ".git"
-	farmerURL   = env.String("FARMER_URL", "https://testbot.seqint.com")
+	farmerURL   = or(os.Getenv("FARMER_URL"), "https://testbot.seqint.com")
 	// httpClient is used for all http requests so that we amortize the setup costs
 	httpClient = http.Client{
 		Timeout: 10 * time.Second,
@@ -76,17 +83,20 @@ var (
 			ExpectContinueTimeout: 1 * time.Second,
 		}}
 
-	// If compiled with -tags aws, bucket and netlify
-	// will be overwritten with the value from Parameter Store.
-	bucket  = env.String("S3_BUCKET", "")
-	netlify = env.String("NETLIFY_AUTH_TOKEN", "")
+	// If compiled with -tags aws, regionS3, bucket, netlify
+	// and gitCredentials will be overwritten with the value
+	// from Parameter Store.
+	regionS3       = "us-west-1"
+	gitCredentials = os.Getenv("GIT_CREDENTIALS")
+	bucket         = os.Getenv("S3_BUCKET")
+	netlify        = os.Getenv("NETLIFY_AUTH_TOKEN")
 
 	// Directory layout
-	rootDir  = path.Join(os.Getenv("HOME"), "worker")
-	binDir   = path.Join(os.Getenv("HOME"), "bin")
-	outDir   = path.Join(rootDir, "out")
-	wsDir    = path.Join(rootDir, "ws")
-	chainDir = path.Join(wsDir, "src/i10r.io")
+	rootDir = path.Join(os.Getenv("HOME"), "worker")
+	binDir  = path.Join(os.Getenv("HOME"), "bin")
+	outDir  = path.Join(rootDir, "out")
+	wsDir   = path.Join(rootDir, "ws")
+	repoDir = path.Join(wsDir, "src/"+or(os.Getenv("DIRNAME"), repo))
 
 	pingReq = testbot.BoxPingReq{
 		ID:   boxID,
@@ -104,14 +114,34 @@ var (
 func Main() {
 	fmt.Println("starting box", boxID)
 
+	if gitCredentials != "" {
+		usr, err := user.Current()
+		if err != nil {
+			log.Fatalkv(context.Background(), log.Error, err, "at", "getting current user")
+		}
+		gitfile := usr.HomeDir + "/.git-credentials"
+
+		// write credentials to ~/.git-credentials
+		must(ioutil.WriteFile(gitfile, []byte(gitCredentials+"\n"), 0700))
+
+		// update ~/.gitconfig to be configured to use ~/.git-credentials
+		must(
+			command(
+				context.Background(),
+				os.Stdout,
+				"git",
+				"config",
+				"--global",
+				"credential.helper",
+				fmt.Sprintf("store --file %v", gitfile),
+			).Run(),
+		)
+	}
+
 	tracer.Start(tracer.WithSampler(tracer.NewAllSampler()))
 
-	region, err := chaws.Region()
-	if err != nil {
-		region = "us-west-1"
-	}
 	s3 = s3pkg.New(session.Must(session.NewSession(
-		aws.NewConfig().WithRegion(region),
+		aws.NewConfig().WithRegion(regionS3),
 	)))
 
 	initFilesystem()
@@ -200,8 +230,8 @@ func initFilesystem() {
 	must(os.RemoveAll(rootDir))
 	must(os.MkdirAll(wsDir, 0700))
 	must(os.MkdirAll(outDir, 0700))
-	must(command(ctx, os.Stdout, "git", "clone", repoURL, chainDir).Run())
-	must(runIn(ctx, chainDir, command(ctx, os.Stdout, "git", "checkout", "-bt")))
+	must(command(ctx, os.Stdout, "git", "clone", repoURL, repoDir).Run())
+	must(runIn(ctx, repoDir, command(ctx, os.Stdout, "git", "checkout", "-bt")))
 }
 
 func waitState(oldState testbot.BoxState) (newState testbot.BoxState) {
@@ -267,7 +297,7 @@ func startJob(job testbot.Job) func() {
 	curJob = job
 	curMu.Unlock()
 
-	cmddir := filepath.Join(chainDir, filepath.FromSlash(job.Dir))
+	cmddir := filepath.Join(repoDir, filepath.FromSlash(job.Dir))
 
 	// must be called exactly once (to close f)
 	uploadAndPostStatus := func(status, desc string) {
@@ -283,7 +313,7 @@ func startJob(job testbot.Job) func() {
 		f.Seek(0, 0)
 		if s := scanError(f); s != "" && status != "success" {
 			s = strings.Replace(s, cmddir+"/", "", -1)
-			s = strings.Replace(s, chainDir+"/", "$I10R/", -1)
+			s = strings.Replace(s, repoDir+"/", "$I10R/", -1)
 			desc += ": " + s
 		}
 		f.Seek(0, 0)
@@ -338,10 +368,10 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 	err := setupJob(ctx, &setupBuf, job.SHA)
 	if err != nil {
 		w.Write(setupBuf.Bytes())
-		return nil, nil, errors.Wrap(err, "clone")
+		return nil, nil, xerrors.Errorf("clone: %w", err)
 	}
 	fmt.Fprintln(w, "setup ok", time.Since(start))
-	cmddir := path.Join(chainDir, job.Dir)
+	cmddir := path.Join(repoDir, job.Dir)
 
 	// Before we run actual tests, traverse the tree to find all `setup` tasks in all Testfiles
 	// and run these tasks first. This will guarantee, for example, that when a Go package depends
@@ -405,7 +435,7 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 	cmd, ok := entries[job.Name]
 	if !ok {
 		fmt.Fprintln(w, "cannot find Testfile entry", job.Name)
-		return nil, nil, errors.New("cannot find Testfile entry " + job.Name)
+		return nil, nil, xerrors.Errorf("cannot find Testfile entry %s", job.Name)
 	}
 
 	span, ctx := tracer.StartSpanFromContext(ctx, "runtest")
@@ -420,11 +450,11 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 func prepareCommand(ctx context.Context, dir string, w io.Writer, cmd string) *exec.Cmd {
 	c := command(ctx, w, "/bin/bash", "-eo", "pipefail", "-c", cmd)
 	c.Env = append(os.Environ(),
-		"CHAIN="+chainDir,
-		"I10R="+chainDir,
+		"CHAIN="+repoDir,
+		"I10R="+repoDir,
 		"GOBIN="+binDir,
 		"NETLIFY_AUTH_TOKEN="+netlify,
-		"PATH="+binDir+":"+chainDir+"/bin:"+os.Getenv("PATH"),
+		"PATH="+binDir+":"+repoDir+"/bin:"+os.Getenv("PATH"),
 	)
 	c.Env = append(c.Env, trace.EnvironmentFor(ctx)...)
 	c.Dir = dir
@@ -464,7 +494,7 @@ func getOutput(j testbot.Job) (*os.File, error) {
 	curMu.Lock()
 	if curJob != j {
 		curMu.Unlock()
-		return nil, errors.New("not found")
+		return nil, xerrors.New("not found")
 	}
 	name := curOut
 	curMu.Unlock()
@@ -497,31 +527,31 @@ func setupJob(ctx context.Context, w io.Writer, sha string) error {
 
 	// Make sure we have sha in the local clone.
 	if !objectExists(ctx, w, sha) {
-		err := runIn(ctx, chainDir, command(ctx, w, "git", "fetch"))
+		err := runIn(ctx, repoDir, command(ctx, w, "git", "fetch"))
 		if err != nil {
 			// Sometimes this fails, and trying again usually works.
 			// So try again just one more time, after a brief wait.
 			// If it still fails after that, give up.
 			time.Sleep(2 * time.Second)
-			err = runIn(ctx, chainDir, command(ctx, w, "git", "fetch"))
+			err = runIn(ctx, repoDir, command(ctx, w, "git", "fetch"))
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	err := runIn(ctx, chainDir, command(ctx, w, "git", "clean", "-xdf"))
+	err := runIn(ctx, repoDir, command(ctx, w, "git", "clean", "-xdf"))
 	if err != nil {
 		return err
 	}
-	return runIn(ctx, chainDir, command(ctx, w, "git", "reset", "--hard", sha))
+	return runIn(ctx, repoDir, command(ctx, w, "git", "reset", "--hard", sha))
 }
 
 // objectExists returns whether the object definitely exists.
 // It returns false if the object doesn't exist, or if there
 // was an error.
 func objectExists(ctx context.Context, w io.Writer, sha string) bool {
-	err := runIn(ctx, chainDir, command(ctx, w, "git", "cat-file", "-e", sha))
+	err := runIn(ctx, repoDir, command(ctx, w, "git", "cat-file", "-e", sha))
 	return err == nil
 }
 

@@ -14,7 +14,7 @@ See [`worker/main.go`](worker/main.go) for theory of operation.
 ### 1. Install Binaries
 
 ```sh
-go install i10r.io/cmd/testbot
+go install github.com/wepogo/testbot/cmd/testbot
 ```
 
 ### 2. Create Database
@@ -46,7 +46,7 @@ BASE_URL=https://{{ THE_NGROK_TUNNEL_YOU_CREATED }}.ngrok.io/ \
 DATABASE_URL=postgres:///testbot?sslmode=disable \
 GITHUB_TOKEN={{ THE_TOKEN_YOU_CREATED }} \
 GITHUB_REPO=citest \
-GITHUB_ORG=interstellar \
+GITHUB_ORG=wepogo \
 HOOK_SECRET=anything \
 testbot farmer
 ```
@@ -61,12 +61,12 @@ GITHUB_REPO=citest \
 testbot worker
 ```
 
-Make a change to [citest](https://github.com/interstellar/citest) in a branch and
+Make a change to [citest](https://github.com/wepogo/citest) in a branch and
 open a pull request. You should receive the pull request hook to your local
 farmer and see your local worker pick up the job.
 
 When you're done, you may need to clean up the automatically-created webhook
-in [citest's webhook settings](https://github.com/interstellar/citest/settings/hooks).
+in [citest's webhook settings](https://github.com/wepogo/citest/settings/hooks).
 
 ## The Worker Host
 
@@ -96,6 +96,13 @@ testbot is deployed in two places:
 * `testbot worker` to EC2 boxes
 
 ### Farmer
+
+Initialize the schema.
+
+```
+export APP=testbot-farmer
+psql `heroku config:get DATABASE_URL -a $APP` < ./farmer/schema.sql
+```
 
 The Farmer runs on Heroku. The app is named: `chaintestbot`
 

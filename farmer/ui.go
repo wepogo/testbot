@@ -24,7 +24,7 @@ var page = template.Must(template.New("page").Funcs(funcMap).Parse(`
 {{- .ElapsedSp}} <a href={{.TraceURL}}>{{.ElapsedMS}}ms</a>
 {{- if eq .State "success"}} ok   {{else}} <b>fail</b> {{end -}}
 {{- range .PR -}}
-<a href=https://github.com/interstellar/i10r/pull/{{.}}>{{.}}</a> {{end -}}
+<a href=https://github.com/{{$.Org}}/{{$.Repo}}/pull/{{.}}>{{.}}</a> {{end -}}
 {{- printf "%.8s" .SHA}} {{.Dir}} {{.Name -}}
 {{- if eq .State "success"}}{{else}} <b>{{.Desc}}</b>{{end -}}
 {{- end -}}

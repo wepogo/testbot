@@ -6,8 +6,9 @@ import (
 	"net/url"
 	"time"
 
-	"i10r.io/errors"
-	"i10r.io/testbot"
+	"golang.org/x/xerrors"
+
+	"github.com/wepogo/testbot"
 )
 
 const enspace = "\u2002"
@@ -39,11 +40,7 @@ func createHook() error {
 	}
 	err := gh.Postf(data, nil, "/hub")
 	if err != nil {
-		hs := "redacted"
-		if hookSecret == "" {
-			hs = "empty"
-		}
-		err = errors.Wrapf(err, "unable to create hook. check $HOOK_SECRET [%s], $GITHUB_ORG [%s], or $GITHUB_REPO [%s]", hs, org, repo)
+		err = xerrors.Errorf("unable to create hook. check $GITHUB_ORG [%s] or $GITHUB_REPO [%s]: %w", org, repo, err)
 		return err
 	}
 	return nil

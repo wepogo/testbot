@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/interstellar/testbot/log"
 	"golang.org/x/xerrors"
+
+	"github.com/wepogo/testbot/log"
 )
 
 // Read decodes a single JSON text from r into v.

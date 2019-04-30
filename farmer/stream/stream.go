@@ -8,7 +8,7 @@ import (
 	"io"
 	"sync"
 
-	"i10r.io/testbot"
+	"github.com/wepogo/testbot"
 )
 
 type key struct {

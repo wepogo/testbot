@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/interstellar/testbot/log"
+	"github.com/wepogo/testbot/log"
 )
 
 func TestWriteArray(t *testing.T) {

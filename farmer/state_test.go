@@ -5,13 +5,16 @@ import (
 	"reflect"
 	"testing"
 
-	"i10r.io/database/pg/pgtest"
-	"i10r.io/testbot"
+	"github.com/jbowens/pqtest"
+
+	"github.com/wepogo/testbot"
 )
 
 func TestSchema(t *testing.T) {
+	db = pqtest.Open(t, pqtest.SchemaFile("schema.sql"))
+	defer db.Close()
+
 	ctx := context.Background()
-	_, db = pgtest.NewDB(t, "schema.sql")
 	must(t, boxPing(ctx, testbot.BoxPingReq{ID: "box1"}))
 	_, err := upsertPR(ctx, 1, "commit1")
 	must(t, err)

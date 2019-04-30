@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/interstellar/testbot"
-	"github.com/interstellar/testbot/farmer"
-	"github.com/interstellar/testbot/worker"
+	"github.com/wepogo/testbot"
+	"github.com/wepogo/testbot/farmer"
+	"github.com/wepogo/testbot/worker"
 )
 
 func main() {

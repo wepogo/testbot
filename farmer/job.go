@@ -8,10 +8,11 @@ import (
 	"sort"
 	"time"
 
-	"i10r.io/errors"
-	"i10r.io/log"
-	"i10r.io/net/client/github"
-	"i10r.io/testbot"
+	"golang.org/x/xerrors"
+
+	"github.com/wepogo/testbot"
+	"github.com/wepogo/testbot/github"
+	"github.com/wepogo/testbot/log"
 )
 
 // populateJobs gets the list of files
@@ -23,7 +24,7 @@ import (
 func populateJobs(ctx context.Context, pr prObj) error {
 	modified, err := upsertPR(ctx, pr.Number, pr.Head.SHA)
 	if err != nil {
-		return errors.Wrap(err)
+		return xerrors.Errorf("upserting pr: %w", err)
 	}
 	if !modified {
 		return nil // nothing new to do
@@ -45,7 +46,7 @@ func populateJobs(ctx context.Context, pr prObj) error {
 		err = gh.GetAllf(&files, "pulls/%d/files", pr.Number)
 	}
 	if err != nil {
-		return errors.Wrap(err)
+		return xerrors.Errorf("getting pr files: %w", err)
 	}
 	var dirs []string
 	for _, file := range files {

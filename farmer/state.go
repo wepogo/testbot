@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"golang.org/x/xerrors"
 
-	"i10r.io/errors"
-	"i10r.io/log"
-	"i10r.io/testbot"
+	"github.com/wepogo/testbot"
+	"github.com/wepogo/testbot/log"
 )
 
 var (
@@ -106,7 +106,7 @@ func loadAllBoxState(ctx context.Context) error {
 	const q = `SELECT box, sha, dir, name FROM run`
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
-		return errors.Wrap(err)
+		return xerrors.Errorf("querying box state: %w", err)
 	}
 
 	newStates := make(map[string]testbot.BoxState)
@@ -116,12 +116,12 @@ func loadAllBoxState(ctx context.Context) error {
 		var job testbot.Job
 		err = rows.Scan(&box, &job.SHA, &job.Dir, &job.Name)
 		if err != nil {
-			return errors.Wrap(err)
+			return xerrors.Errorf("scanning rows: %w", err)
 		}
 		newStates[box] = testbot.BoxState{ID: box, Job: job}
 	}
 	if rows.Err() != nil {
-		return errors.Wrap(err)
+		return xerrors.Errorf("rows.Err: %w", err)
 	}
 
 	mu.Lock()
@@ -138,7 +138,7 @@ func reportResults(ctx context.Context) error {
 	`
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
-		return errors.Wrap(err)
+		return xerrors.Errorf("querying unreported results: %w", err)
 	}
 	defer rows.Close()
 
@@ -149,7 +149,7 @@ func reportResults(ctx context.Context) error {
 		var job testbot.Job
 		err = rows.Scan(&id, &job.SHA, &job.Dir, &job.Name, &state, &desc)
 		if err != nil {
-			return errors.Wrap(err)
+			return xerrors.Errorf("scanning: %w", err)
 		}
 		err := postStatus(ctx, job, state, desc, selfURLf("result/%d", id))
 		if err != nil {
@@ -159,7 +159,7 @@ func reportResults(ctx context.Context) error {
 		reported = append(reported, id)
 	}
 	if rows.Err() != nil {
-		return errors.Wrap(rows.Err())
+		return xerrors.Errorf("rows.Err: %w", err)
 	}
 
 	q = `
@@ -167,7 +167,10 @@ func reportResults(ctx context.Context) error {
 		WHERE id = ANY($1::int[])
 	`
 	_, err = db.ExecContext(ctx, q, pq.Array(reported))
-	return errors.Wrap(err)
+	if err != nil {
+		return xerrors.Errorf("updating result as reported: %w", err)
+	}
+	return nil
 }
 
 // upsertPR inserts or updates pr record for num

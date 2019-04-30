@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"i10r.io/testbot"
+	"github.com/wepogo/testbot"
 )
 
 func TestGetCancel(t *testing.T) {

@@ -76,6 +76,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -85,14 +86,13 @@ import (
 	_ "github.com/heroku/x/hmetrics/onload"
 	"github.com/kr/githubauth"
 	"github.com/lib/pq"
+	"golang.org/x/xerrors"
 
-	"i10r.io/env"
-	"i10r.io/errors"
-	"i10r.io/log"
-	"i10r.io/net/client/github"
-	"i10r.io/net/http/httpjson"
-	"i10r.io/testbot"
-	"i10r.io/testbot/farmer/stream"
+	"github.com/wepogo/testbot"
+	"github.com/wepogo/testbot/farmer/stream"
+	"github.com/wepogo/testbot/github"
+	"github.com/wepogo/testbot/httpjson"
+	"github.com/wepogo/testbot/log"
 )
 
 const (
@@ -102,18 +102,27 @@ const (
 	waitTimeout     = 25 * time.Second // less than 30s Heroku timeout
 )
 
+func or(v, d string) string {
+	if v == "" {
+		v = d
+	}
+	return v
+}
+
 var (
 	// TODO(tmaher): move secrets into EC2 parameter store.
-	baseURL    = env.URL("BASE_URL", "https://testbot.seqint.com/")
-	dbURL      = os.Getenv("DATABASE_URL")
-	hookSecret = os.Getenv("HOOK_SECRET")
-	org        = os.Getenv("GITHUB_ORG")
-	repo       = os.Getenv("GITHUB_REPO")
-	ghToken    = github.Token(os.Getenv("GITHUB_TOKEN"))
-	listenAddr = env.String("LISTEN", ":1994")
-	dumpReqs   = env.Bool("DUMP", false)
+	baseURLStr  = or(os.Getenv("BASE_URL"), "https://testbot.seqint.com/")
+	dumpReqsStr = or(os.Getenv("DUMP"), "0")
+	dbURL       = os.Getenv("DATABASE_URL")
+	hookSecret  = os.Getenv("HOOK_SECRET")
+	org         = os.Getenv("GITHUB_ORG")
+	repo        = os.Getenv("GITHUB_REPO")
+	ghToken     = github.Token(os.Getenv("GITHUB_TOKEN"))
+	listenAddr  = or(os.Getenv("LISTEN"), ":1994")
 )
 
+var baseURL *url.URL
+var dumpReqs bool
 var db *sql.DB
 var gh = github.Open(
 	ghToken,
@@ -124,7 +133,19 @@ var gh = github.Open(
 var httpClient = new(http.Client)
 
 func Main() {
-	err := createHook()
+	var err error
+	baseURL, err = url.Parse(baseURLStr)
+	if err != nil {
+		log.Fatalkv(context.Background(), "variable", "BASE_URL", log.Error, err)
+		os.Exit(1)
+	}
+	dumpReqs, err = strconv.ParseBool(dumpReqsStr)
+	if err != nil {
+		log.Fatalkv(context.Background(), "variable", "DUMP", log.Error, err)
+		os.Exit(1)
+	}
+
+	err = createHook()
 	if err != nil {
 		log.Fatalkv(context.Background(), "error", err)
 	}
@@ -426,7 +447,10 @@ func boxPing(ctx context.Context, p testbot.BoxPingReq) error {
 		ON CONFLICT (id) DO UPDATE SET last_seen_at = now(), host = $2
 	`
 	_, err := db.ExecContext(ctx, q, p.ID, p.Host)
-	return errors.Wrap(err, "insert box")
+	if err != nil {
+		return xerrors.Errorf("insert box: %s", err)
+	}
+	return nil
 }
 
 func boxLongPoll(ctx context.Context, old testbot.BoxState) testbot.BoxState {

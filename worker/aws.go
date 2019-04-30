@@ -3,14 +3,10 @@
 package worker
 
 import (
-	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"os/user"
 
-	"i10r.io/config/aws"
+	"github.com/wepogo/testbot/config/aws"
 )
 
 func init() {
@@ -20,30 +16,12 @@ func init() {
 	}
 	store.PathPrefix = fmt.Sprintf("/%s/testbot-worker/env/", stack)
 
+	region, err := aws.Region()
+	if err == nil {
+		regionS3 = region
+	}
+
 	bucket = store.GetString("S3_BUCKET", "")
 	netlify = store.GetString("NETLIFY_AUTH_TOKEN", "")
-
-	creds := store.GetString("GIT_CREDENTIALS", "")
-
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatalf("getting current user: %s\n", err)
-	}
-	gitfile := usr.HomeDir + "/.git-credentials"
-
-	// write credentials to ~/.git-credentials
-	must(ioutil.WriteFile(gitfile, []byte(creds+"\n"), 0700))
-
-	// update ~/.gitconfig to be configured to use ~/.git-credentials
-	must(
-		command(
-			context.Background(),
-			os.Stdout,
-			"git",
-			"config",
-			"--global",
-			"credential.helper",
-			fmt.Sprintf("store --file %v", gitfile),
-		).Run(),
-	)
+	gitCredentials = store.GetString("GIT_CREDENTIALS", "")
 }
