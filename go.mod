@@ -1,4 +1,4 @@
-module github.com/interstellar/testbot
+module github.com/wepogo/testbot
 
 require (
 	github.com/aws/aws-sdk-go v1.19.20
