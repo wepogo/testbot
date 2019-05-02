@@ -1,4 +1,0 @@
-:repo:deb https://dl.yarnpkg.com/debian/ stable main
-:repo:deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
-yarn
-nodejs
