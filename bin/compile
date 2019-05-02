@@ -31,11 +31,11 @@ if [ -f "$ENV_DIR/SETUP_SCRIPT" ]; then
   SETUP_SCRIPT=$(cat "$ENV_DIR/SETUP_SCRIPT")
 fi
 
-if [ ! -f "$CACHE_DIR/$GITHUB_ORG-$GITHUB_REPO" ]; then
+REPO_DIR="$CACHE_DIR/$GITHUB_ORG-$GITHUB_REPO"
+if [ ! -d "$REPO_DIR" ]; then
     cd $CACHE_DIR
     git clone "https://github.com/$GITHUB_ORG/$GITHUB_REPO.git" "$GITHUB_ORG-$GITHUB_REPO"
 fi
-REPO_DIR="$CACHE_DIR/$GITHUB_ORG-$GITHUB_REPO"
 cd $REPO_DIR
 git pull
 
