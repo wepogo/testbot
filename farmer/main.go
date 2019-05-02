@@ -54,15 +54,6 @@ changes (by LISTENing to NOTIFY messages sent by
 triggers in stored procedures and diffing state in
 memory).
 
-Footnote about table naming: we use singular names for
-tables (job, run, result) rather than plural, for the
-same reason programming languages use singular names for
-classes. It is implicitly understood that the table (or
-class) is a plurality, and that the name describes a
-single record (or instance). There is no need to convert
-(either mechanically or mentally) between plural and
-singular forms.
-
 */
 
 import (
