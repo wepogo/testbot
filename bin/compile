@@ -32,6 +32,7 @@ if [ -f "$ENV_DIR/SETUP_SCRIPT" ]; then
 fi
 
 if [ ! -f "$CACHE_DIR/$GITHUB_ORG-$GITHUB_REPO" ]; then
+    cd $CACHE_DIR
     git clone "https://github.com/$GITHUB_ORG/$GITHUB_REPO.git" "$GITHUB_ORG-$GITHUB_REPO"
 fi
 REPO_DIR="$CACHE_DIR/$GITHUB_ORG-$GITHUB_REPO"

@@ -111,8 +111,8 @@ func or(v, d string) string {
 
 var (
 	// TODO(tmaher): move secrets into EC2 parameter store.
-	baseURLStr  = or(os.Getenv("BASE_URL"), "https://testbot.seqint.com/")
-	dumpReqsStr = or(os.Getenv("DUMP"), "0")
+	baseURLStr  = os.Getenv("BASE_URL")
+	dumpReqsStr = os.Getenv("DUMP")
 	dbURL       = os.Getenv("DATABASE_URL")
 	hookSecret  = os.Getenv("HOOK_SECRET")
 	org         = os.Getenv("GITHUB_ORG")
@@ -140,7 +140,7 @@ func Main() {
 		os.Exit(1)
 	}
 	dumpReqs, err = strconv.ParseBool(dumpReqsStr)
-	if err != nil {
+	if len(dumpReqsStr) > 0 && err != nil {
 		log.Fatalkv(context.Background(), "variable", "DUMP", log.Error, err)
 		os.Exit(1)
 	}
