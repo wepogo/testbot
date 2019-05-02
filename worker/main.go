@@ -54,20 +54,13 @@ import (
 // so this is about as tight as we can make it right now.
 const jobTimeout = 3 * time.Minute
 
-func or(v, d string) string {
-	if v == "" {
-		v = d
-	}
-	return v
-}
-
 var (
 	boxID       = randID()
 	hostname, _ = os.Hostname()
-	org         = or(os.Getenv("GITHUB_ORG"), "wepogo")
-	repo        = or(os.Getenv("GITHUB_REPO"), "pogo")
+	org         = os.Getenv("GITHUB_ORG")
+	repo        = os.Getenv("GITHUB_REPO")
 	repoURL     = "https://github.com/" + org + "/" + repo + ".git"
-	farmerURL   = or(os.Getenv("FARMER_URL"), "https://testbot.seqint.com")
+	farmerURL   = os.Getenv("FARMER_URL")
 	// httpClient is used for all http requests so that we amortize the setup costs
 	httpClient = http.Client{
 		Timeout: 10 * time.Second,
@@ -96,7 +89,7 @@ var (
 	binDir  = path.Join(os.Getenv("HOME"), "bin")
 	outDir  = path.Join(rootDir, "out")
 	wsDir   = path.Join(rootDir, "ws")
-	repoDir = path.Join(wsDir, "src/"+or(os.Getenv("DIRNAME"), repo))
+	repoDir = path.Join(wsDir, "src/"+repo)
 
 	pingReq = testbot.BoxPingReq{
 		ID:   boxID,
