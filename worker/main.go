@@ -80,8 +80,8 @@ var (
 	// If compiled with -tags aws, regionS3, bucket, netlify
 	// and gitCredentials will be overwritten with the value
 	// from Parameter Store.
-	regionS3       = "us-west-1"
 	gitCredentials = os.Getenv("GIT_CREDENTIALS")
+	regionS3       = os.Getenv("S3_REGION")
 	bucket         = os.Getenv("S3_BUCKET")
 	netlify        = os.Getenv("NETLIFY_AUTH_TOKEN")
 
