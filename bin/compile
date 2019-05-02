@@ -26,7 +26,7 @@ GIT_CREDENTIALS=$(cat "$ENV_DIR/GIT_CREDENTIALS")
 cp "$ENV_DIR/GIT_CREDENTIALS" ~/.git-credentials
 git config --global credential.helper "store --file ~/.git-credentials"
 
-SETUP_SCRIPT="testbot-setup.sh"
+SETUP_SCRIPT="testbot/setup.sh"
 if [ -f "$ENV_DIR/SETUP_SCRIPT" ]; then
   SETUP_SCRIPT=$(cat "$ENV_DIR/SETUP_SCRIPT")
 fi
@@ -38,9 +38,9 @@ REPO_DIR="$CACHE_DIR/$GITHUB_ORG-$GITHUB_REPO"
 cd $REPO_DIR
 git pull
 
-if [ -f "$REPO_DIR/Aptfile" ]; then
+if [ -f "$REPO_DIR/testbot/Aptfile" ]; then
   BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-  $BIN_DIR/compile-apt $REPO_DIR $CACHE_DIR
+  $BIN_DIR/compile-apt $REPO_DIR/testbot $CACHE_DIR
 fi
 
 if [ ! -f "$SETUP_SCRIPT" ]; then
