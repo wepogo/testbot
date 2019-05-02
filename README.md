@@ -19,39 +19,48 @@ git clone https://github.com/wepogo/testbot
 cd testbot
 ```
 
+Create a Heroku app for testbot farmer.
+Set it as the `farmer` Git remote:
+
+```
+export FARMER=your-heroku-app-name
+git remote add farmer git@heroku.com:$FARMER.git
+```
+
+Create a Heroku app for your testbot workers.
+Set it as the `workers` Git remote:
+
+```
+export WORKERS=your-heroku-app-name
+git remote add workers git@heroku.com:$WORKERS.git
+```
+
 ## Farmer
-
-Set a local `$APP` environment variable to your Heroku app name:
-
-```
-export APP=testbot-farmer
-```
 
 Initialize the schema:
 
 ```
-psql `heroku config:get DATABASE_URL -a $APP` < ./farmer/schema.sql
+psql `heroku config:get DATABASE_URL -a $FARMER` < ./farmer/schema.sql
 ```
 
 Create a [GitHub personal access token](https://github.com/settings/tokens)
 with `repo` and `write:repo_hook` scopes and set it:
 
 ```
-heroku config:set GITHUB_TOKEN=YOUR_TOKEN -a $APP
+heroku config:set GITHUB_TOKEN=YOUR_TOKEN -a $FARMER
 ```
 
 Set the GitHub organization and repository names of the repo
 you plan to test with testbot:
 
 ```
-heroku config:set GITHUB_ORG=YOUR_ORG GITHUB_REPO=YOUR_REPO -a $APP
+heroku config:set GITHUB_ORG=YOUR_ORG GITHUB_REPO=YOUR_REPO -a $FARMER
 ```
 
-Deploy testbot:
+Deploy testbot farmer:
 
 ```
-git remote add ci git@heroku.com:$APP.git
-git push ci master
+git push farmer master
 ```
 
 Don't scale the farmer app to more than 1 dyno.
