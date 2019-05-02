@@ -107,6 +107,11 @@ var (
 func Main() {
 	fmt.Println("starting box", boxID)
 
+	if bucket == "" {
+		fmt.Fprintln(os.Stderr, "S3_BUCKET is unset")
+		os.Exit(1)
+	}
+
 	if gitCredentials != "" {
 		usr, err := user.Current()
 		if err != nil {
