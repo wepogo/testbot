@@ -39,7 +39,6 @@ cd $REPO_DIR
 git pull
 
 if [ -f "$REPO_DIR/Aptfile" ]; then
-  echo "REPO_DIR: $REPO_DIR"
   BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
   $BIN_DIR/compile-apt $REPO_DIR $CACHE_DIR
 fi
