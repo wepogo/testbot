@@ -40,6 +40,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	s3pkg "github.com/aws/aws-sdk-go/service/s3"
 	"golang.org/x/xerrors"
@@ -138,8 +139,9 @@ func Main() {
 
 	tracer.Start(tracer.WithSampler(tracer.NewAllSampler()))
 
+	// TODO: replace credentials.AnonymousCredentials
 	s3 = s3pkg.New(session.Must(session.NewSession(
-		aws.NewConfig().WithRegion(regionS3),
+		aws.NewConfig().WithRegion(regionS3).WithCredentials(credentials.AnonymousCredentials),
 	)))
 
 	initFilesystem()
