@@ -88,12 +88,7 @@ GOPATH=/home/ubuntu/testbot-worker go install -tags aws chain/cmd/testbot
 ~/testbot-worker/bin/testbot onejob $SHA $DIR $NAME
 ```
 
-## Deploying
-
-testbot is deployed in two places:
-
-* `testbot farmer` to Heroku
-* `testbot worker` to EC2 boxes
+## Deploying to Heroku
 
 ### Farmer
 
@@ -104,11 +99,8 @@ export APP=testbot-farmer
 psql `heroku config:get DATABASE_URL -a $APP` < ./farmer/schema.sql
 ```
 
-The Farmer runs on Heroku. The app is named: `chaintestbot`
-
 ```
-cd $I10R
-git remote add ci git@heroku.com:chaintestbot.git
+git remote add ci git@heroku.com:$APP.git
 git push ci main:master
 ```
 
