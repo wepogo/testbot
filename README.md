@@ -57,8 +57,9 @@ you plan to test with testbot:
 heroku config:set GITHUB_ORG=YOUR_ORG GITHUB_REPO=YOUR_REPO -a $FARMER
 ```
 
-Create a GitHub OAuth2 application in the GitHub organization
-and set its client ID and client secret:
+Create a GitHub OAuth2 application in the GitHub organization.
+It is used for authenticating access to the farmer's web UI.
+Set its client ID and client secret in the farmer's config:
 
 ```
 heroku config:set CLIENT_ID=YOUR_CLIENT_ID CLIENT_SECRET=YOUR_CLIENT_SECRET -a $FARMER
