@@ -1,90 +1,100 @@
 # testbot
 
-testbot is an open source, run-it-yourself Continuous Integration (CI) service.
+testbot is a free,
+open source,
+run-it-yourself
+Continuous Integration (CI) tool.
 
-It consists of two services:
+To run a testbot instance,
+read [Getting Started](docs/GETTING_STARTED.md).
 
-* `testbot farmer` is a process that coordinates activity between GitHub
-  and worker processes.
-  See [`farmer/main.go`](farmer/main.go) for theory of operation.
-* `testbot worker` is a process that runs the tests.
-  See [`worker/main.go`](worker/main.go) for theory of operation.
+## Why
 
-## Deploying to Heroku
+Try testbot if you want these things from your CI tool:
 
-Clone this repo:
+1. begin running the tests in < 5s after opening or editing a pull request
+2. run only the tests relevant to the change
+3. avoid leaking code, credentials, or data to a third-party CI provider
 
-```
-git clone https://github.com/wepogo/testbot
-cd testbot
-```
+Common causes of slow-starting tests on hosted CI services
+are multi-tenant queues and containerization.
+In those environments,
+noisy neighbors backlog the queues
+and containers have cache misses.
 
-Create a Heroku app for testbot farmer.
-Set it as the `farmer` Git remote:
+If you organize your code into a [monorepo](https://www.statusok.com/monorepo),
+your pull requests often will not need to run most tests.
 
-```
-export FARMER=your-heroku-app-name
-git remote add farmer git@heroku.com:$FARMER.git
-```
+## How it works
 
-Create a Heroku app for your testbot workers.
-Set it as the `workers` Git remote:
-
-```
-export WORKERS=your-heroku-app-name
-git remote add workers git@heroku.com:$WORKERS.git
-```
-
-## Farmer
-
-Initialize the schema:
+Imagine a monorepo that contains some files like this:
 
 ```
-psql `heroku config:get DATABASE_URL -a $FARMER` < ./farmer/schema.sql
+.
+├── ...
+├── dashboard
+│   └── Testfile
+├── sdk
+│   ├── go
+│   │   └── Testfile
+│   ├── node
+│   │   └── Testfile
+│   └── ruby
+│       └── Testfile
+├── server
+│   └── Testfile
 ```
 
-Create a [GitHub personal access token](https://github.com/settings/tokens)
-with `repo` and `write:repo_hook` scopes and set it:
+We open a GitHub pull request to add a new feature to the SDKs:
 
 ```
-heroku config:set GITHUB_TOKEN=YOUR_TOKEN -a $FARMER
+sdk/go/account.go             | 10 +++++-----
+sdk/go/account_test.go        | 10 +++++-----
+sdk/node/src/account.ts       | 10 +++++-----
+sdk/node/test/account.ts      | 10 +++++-----
+sdk/ruby/lib/account.rb       | 10 +++++-----
+sdk/ruby/spec/account_spec.rb | 10 +++++-----
+6 files changed, 60 insertions(+), 60 deletions(-)
 ```
 
-Set the GitHub organization and repository names of the repo
-you plan to test with testbot:
+A `testbot farmer` process on a server
+responds to the GitHub webhook by:
+
+* identifying the directories containing files that have changed
+* walking up the file hierarchy to find `Testfile`s for changed directories
+* saving test jobs to its backing Postgres database
+
+Each `Testfile` defines test jobs for its directory. Ours might be:
 
 ```
-heroku config:set GITHUB_ORG=YOUR_ORG GITHUB_REPO=YOUR_REPO -a $FARMER
+$ cat $ORG/sdk/go/Testfile
+tests: cd $ORG/sdk && go test -cover ./...
+$ cat $ORG/sdk/node/Testfile
+tests: cd $ORG/sdk/node && npm install && npm test
+$ cat $ORG/sdk/ruby/Testfile
+tests: $ORG/sdk/ruby/test.sh
 ```
 
-Create a GitHub OAuth2 application in the GitHub organization.
-It is used for authenticating access to the farmer's web UI.
-Set its client ID and client secret in the farmer's config:
+Each line contains a name and command
+separated by a colon.
+The name appears in GitHub checks.
+The command is run by a `testbot worker`,
+which is continuously long polling `testbot farmer` via HTTP over TLS,
+asking for test jobs.
 
-```
-heroku config:set CLIENT_ID=YOUR_CLIENT_ID CLIENT_SECRET=YOUR_CLIENT_SECRET -a $FARMER
-```
+We run more `testbot worker` instances to increase test parallelism.
 
-Deploy testbot farmer:
+In this example,
+the tests for the Go, Node, and Ruby SDKs
+will begin to run almost simultaneously
+as different `testbot worker` processes pick them up.
 
-```
-git push farmer master
-```
+Tests for `dashboard` and `server` will not run in this pull request
+because no files in their directories were changed.
 
-Don't scale the farmer app to more than 1 dyno.
-If you do, live test output will become unreliable.
-Everything else should continue to work fine, but
-the live test output assumes there is only one farmer.
+## Credit
 
-## Worker
-
-All of your repo's dependencies must be set up on the worker host
-in order for the worker processes to run all tests.
-
-The worker can be configured with these environment variables:
-
-```
-GIT_CREDENTIALS
-S3_REGION
-S3_BUCKET
-```
+[Keith Rarick](https://xph.us/)
+designed and implemented testbot in November 2017.
+Since then, engineers at Chain, Interstellar, and Pogo
+have been maintaining it and running it on a succession of internal monorepos.
