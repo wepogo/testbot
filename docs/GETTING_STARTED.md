@@ -74,7 +74,7 @@ with `repo` and `write:repo_hook` scopes and set it:
 heroku config:set GITHUB_TOKEN=changeme -r farmer
 ```
 
-Create a GitHub OAuth2 application in the GitHub organization.
+Create a GitHub OAuth2 app in the GitHub org of the repo to be tested.
 It is used for authenticating access to the farmer's web UI.
 Set its client ID and client secret in the farmer's config:
 
