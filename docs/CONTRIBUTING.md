@@ -10,7 +10,7 @@ Create database:
 
 ```sh
 createdb testbot
-psql testbot < $I10R/testbot/farmer/schema.sql
+psql testbot < ./farmer/schema.sql
 ```
 
 In a new shell, start an [ngrok](https://ngrok.com) tunnel:
@@ -25,11 +25,11 @@ with `repo` and `write:repo_hook` scopes.
 In another shell:
 
 ```
-BASE_URL=https://{{ YOUR_NGROK_TUNNEL }}.ngrok.io/ \
 DATABASE_URL=postgres:///testbot?sslmode=disable \
-GITHUB_TOKEN={{ YOUR_TOKEN }} \
+FARMER_URL=https://changeme.ngrok.io/ \
 GITHUB_ORG=wepogo \
 GITHUB_REPO=citest \
+GITHUB_TOKEN=changeme \
 HOOK_SECRET=anything \
 testbot farmer
 ```
