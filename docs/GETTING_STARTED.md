@@ -12,7 +12,7 @@ testbot consists of two services:
 
 TODO
 
-## Deploy to Heroku
+## Initialize Heroku apps
 
 Clone this repo:
 
@@ -21,42 +21,57 @@ git clone https://github.com/wepogo/testbot
 cd testbot
 ```
 
-Create a Heroku app for testbot farmer.
-Set it as the `farmer` Git remote:
+Create a Heroku app for testbot farmer
+and set it as the `farmer` Git remote:
 
 ```
-export FARMER=your-heroku-app-name
-git remote add farmer git@heroku.com:$FARMER.git
+heroku create --remote farmer --buildpack heroku/go
 ```
 
-Create a Heroku app for your testbot workers.
-Set it as the `workers` Git remote:
+Create a Heroku app for testbot workers,
+set it as the `workers` Git remote,
+and add required buildpacks:
 
 ```
-export WORKERS=your-heroku-app-name
-git remote add workers git@heroku.com:$WORKERS.git
+heroku create --remote workers --buildpack heroku/go
+heroku buildpacks:add \
+  --remote workers \
+  --index 1 https://github.com/heroku/heroku-buildpack-ci-postgresql
+heroku buildpacks:add \
+  --remote workers \
+  --index 2 https://www.github.com/jbowens/test-buildpack
 ```
 
-## Farmer
-
-Initialize the schema:
-
-```
-psql `heroku config:get DATABASE_URL -a $FARMER` < ./farmer/schema.sql
-```
-
-Create a [GitHub personal access token](https://github.com/settings/tokens)
-with `repo` and `write:repo_hook` scopes and set it:
+Configure Heroku to compile testbot at build time
+in order to be executed at Heroku run time:
 
 ```
-heroku config:set GITHUB_TOKEN=YOUR_TOKEN -a $FARMER
+heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r farmers
+heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r workers
 ```
 
 Set the GitHub organization and repository names of the repo
 you plan to test with testbot:
 
 ```
-heroku config:set GITHUB_ORG=YOUR_ORG GITHUB_REPO=YOUR_REPO -a $FARMER
+heroku config:set GITHUB_ORG=changeme GITHUB_REPO=changeme -r farmer
+heroku config:set GITHUB_ORG=changeme GITHUB_REPO=changeme -r workers
+```
+
+## Configure and deploy farmer
+
+Create and initialize Postgres database:
+
+```
+heroku addons:create heroku-postgresql:hobby-dev -r farmer
+psql `heroku config:get DATABASE_URL -r farmer` < ./farmer/schema.sql
+```
+
+Create a [GitHub personal access token](https://github.com/settings/tokens)
+with `repo` and `write:repo_hook` scopes and set it:
+
+```
+heroku config:set GITHUB_TOKEN=changeme -r farmer
 ```
 
 Create a GitHub OAuth2 application in the GitHub organization.
@@ -64,10 +79,10 @@ It is used for authenticating access to the farmer's web UI.
 Set its client ID and client secret in the farmer's config:
 
 ```
-heroku config:set CLIENT_ID=YOUR_CLIENT_ID CLIENT_SECRET=YOUR_CLIENT_SECRET -a $FARMER
+heroku config:set CLIENT_ID=changeme CLIENT_SECRET=changeme -r farmer
 ```
 
-Deploy testbot farmer:
+Deploy:
 
 ```
 git push farmer master
@@ -78,7 +93,7 @@ If you do, live test output will become unreliable.
 Everything else should continue to work fine, but
 the live test output assumes there is only one farmer.
 
-## Worker
+## Configure and deploy workers
 
 All of your repo's dependencies must be set up on the worker host
 in order for the worker processes to run all tests.
@@ -89,4 +104,16 @@ The worker can be configured with these environment variables:
 GIT_CREDENTIALS
 S3_REGION
 S3_BUCKET
+```
+
+Deploy:
+
+```
+git push workers master
+```
+
+Scale as many workers as you'd like:
+
+```
+heroku ps:scale workers=5 -r workers
 ```
