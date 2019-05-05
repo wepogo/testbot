@@ -33,8 +33,8 @@ fi
 
 REPO_DIR="$CACHE_DIR/$GITHUB_ORG-$GITHUB_REPO"
 if [ ! -d "$REPO_DIR" ]; then
-    cd $CACHE_DIR
-    git clone "https://github.com/$GITHUB_ORG/$GITHUB_REPO.git" "$GITHUB_ORG-$GITHUB_REPO"
+  cd $CACHE_DIR
+  git clone "https://github.com/$GITHUB_ORG/$GITHUB_REPO.git" "$GITHUB_ORG-$GITHUB_REPO"
 fi
 cd $REPO_DIR
 git pull
