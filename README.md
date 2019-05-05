@@ -12,7 +12,7 @@ read [Getting Started](docs/GETTING_STARTED.md).
 
 Try testbot if you want these things from your CI tool:
 
-1. begin running the tests in < 5s after opening or editing a pull request
+1. start tests in < 3s after opening or editing a pull request
 2. run only the tests relevant to the change
 3. avoid leaking code, credentials, or data to a third-party CI provider
 
