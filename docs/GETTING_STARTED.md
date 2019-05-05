@@ -42,6 +42,14 @@ heroku buildpacks:add \
   --index 2 https://www.github.com/jbowens/test-buildpack
 ```
 
+Set farmer URL to the newly created Heroku URL
+in order for the services to communicate with each other:
+
+```
+heroku config:set FARMER_URL=https://changeme.herokuapp.com -r farmer
+heroku config:set FARMER_URL=https://changeme.herokuapp.com -r workers
+```
+
 Configure Heroku to compile testbot at build time
 in order to be executed at Heroku run time:
 
