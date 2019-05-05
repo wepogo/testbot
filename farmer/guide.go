@@ -5,8 +5,7 @@ Automated Testing Tool Guide
 
 We practice "Continuous Integration" (CI), that is, we
 automatically run a set of tests on every commit, before
-we land it. Currently, we do this with an in-house tool
-called testbot. See $I10R/testbot.
+we land it. We do this with an tool called testbot.
 
 Testbot is oriented around pull requests. For any open
 pull request, it runs tests on the commit at the head of
@@ -86,16 +85,14 @@ the test won't be run, and is considered to have failed.
 Test Environment
 
 Each test runs on a machine image derived from the stock
-Ubuntu AMI, modified by $I10R/testbot/worker/setup-box
-on boot. (If you need a new system dependency, ask the
-#infra or #tools team to add it to that script and make
-sure it gets deployed.)
+Ubuntu AMI, modified by $TESTED_REPO/testbot/Aptfile and
+$TESTED_REPO/testbot/setup.sh.
 
 The test runner runs each test in a controlled
 environment:
 
 - makes a fresh, clean checkout in a new workspace
-- sets some environment variables ($I10R, $GOPATH, etc)
+- sets some environment variables
 - runs the test command in the Testfile's directory
 
 If the process exits with a 0 status, the test passes.
