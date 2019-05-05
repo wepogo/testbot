@@ -30,7 +30,7 @@ FARMER_URL=https://changeme.ngrok.io/ \
 GITHUB_ORG=wepogo \
 GITHUB_REPO=citest \
 GITHUB_TOKEN=changeme \
-HOOK_SECRET=anything \
+HOOK_SECRET=changeme \
 testbot farmer
 ```
 
