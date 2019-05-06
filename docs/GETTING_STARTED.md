@@ -30,16 +30,10 @@ heroku create --remote farmer --buildpack heroku/go
 
 Create a Heroku app for testbot workers,
 set it as the `workers` Git remote,
-and add required buildpacks:
+and add your container:
 
 ```
-heroku create --remote workers --buildpack heroku/go
-heroku buildpacks:add \
-  --remote workers \
-  --index 1 https://github.com/heroku/heroku-buildpack-ci-postgresql
-heroku buildpacks:add \
-  --remote workers \
-  --index 2 https://www.github.com/jbowens/test-buildpack
+heroku create --remote workers
 ```
 
 Set farmer URL to the newly created Heroku URL
@@ -48,14 +42,6 @@ in order for the services to communicate with each other:
 ```
 heroku config:set FARMER_URL=https://changeme.herokuapp.com -r farmer
 heroku config:set FARMER_URL=https://changeme.herokuapp.com -r workers
-```
-
-Configure Heroku to compile testbot at build time
-in order to be executed at Heroku run time:
-
-```
-heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r farmers
-heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r workers
 ```
 
 Set the GitHub organization and repository names of the repo
