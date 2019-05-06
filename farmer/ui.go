@@ -20,7 +20,7 @@ var page = template.Must(template.New("page").Funcs(funcMap).Parse(`
   title={{.CreatedAt.Local.Format "2006-01-02T15:04:05.000Z07:00"}}
 >
 {{- reltime .CreatedAt | printf "%8s" -}}
-</time> <a href={{$.BaseURL}}/result/{{.ID}}>{{.ID}}</a>
+</time> <a href={{.BaseURL}}/result/{{.ID}}>{{.ID}}</a>
 {{- .ElapsedSp}} {{.ElapsedMS}}ms
 {{- if eq .State "success"}} ok   {{else}} <b>fail</b> {{end -}}
 {{- range .PR -}}
