@@ -76,7 +76,7 @@ psql `heroku config:get DATABASE_URL -r farmer` < ./farmer/schema.sql
 ```
 
 Create a [GitHub personal access token](https://github.com/settings/tokens)
-with `repo` and `write:repo_hook` scopes and set it:
+with `repo`, `read:org`, and `write:repo_hook` scopes and set it:
 
 ```
 heroku config:set GITHUB_TOKEN=changeme -r farmer
@@ -88,6 +88,12 @@ Set its client ID and client secret in the farmer's config:
 
 ```
 heroku config:set CLIENT_ID=changeme CLIENT_SECRET=changeme -r farmer
+```
+
+Create a secret for creating GitHub hooks:
+
+```
+heroku config:set HOOK_SECRET=changeme -r farmer
 ```
 
 Deploy:
@@ -106,12 +112,17 @@ the live test output assumes there is only one farmer.
 All of your repo's dependencies must be set up on the worker host
 in order for the worker processes to run all tests.
 
-The worker can be configured with these environment variables:
+Create a [GitHub personal access token](https://github.com/settings/tokens)
+with `repo`, `read:gpg_key`, `read:public_key`, `read:user` scopes and set it:
 
 ```
-GIT_CREDENTIALS
-S3_REGION
-S3_BUCKET
+heroku config:set GIT_CREDENTIALS=https://username:changeme@github.com -r workers
+```
+
+Set S3 bucket and region:
+
+```
+heroku config:set S3_REGION=changeme S3_BUCKET=changeme -r workers
 ```
 
 Deploy:

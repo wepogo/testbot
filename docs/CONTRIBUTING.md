@@ -20,7 +20,7 @@ ngrok http 1994
 ```
 
 Create a [GitHub personal access token](https://github.com/settings/tokens)
-with `repo` and `write:repo_hook` scopes.
+with `read:org`, `repo`, and `write:repo_hook` scopes.
 
 In another shell:
 
@@ -30,7 +30,7 @@ FARMER_URL=https://changeme.ngrok.io/ \
 GITHUB_ORG=wepogo \
 GITHUB_REPO=citest \
 GITHUB_TOKEN=changeme \
-HOOK_SECRET=$(hexdump -n 4 -e '4/4 "%08X" 1 "\n"' /dev/random) \
+HOOK_SECRET=changeme \
 testbot farmer
 ```
 
