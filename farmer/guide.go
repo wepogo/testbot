@@ -30,8 +30,6 @@ this directory. A Testfile looks like this:
     npmtest: npm test
     gotest: go test
 
-Read on for more details.
-
 
 Testfile Format
 
@@ -84,7 +82,7 @@ the test won't be run, and is considered to have failed.
 
 Test Environment
 
-Each test runs on a machine image derived from the stock
+Each test runs on a machine image derived from a stock
 Ubuntu AMI, modified by $TESTED_REPO/testbot/Aptfile and
 $TESTED_REPO/testbot/setup.sh.
 

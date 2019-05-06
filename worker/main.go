@@ -6,7 +6,8 @@ Theory of Operation
 
 The worker process pulls jobs from the farmer and runs the job's tests.
 
-The `testbot worker` command runs on EC2. It:
+The `testbot worker` command runs on a host
+with all necessary runtimes installed. It:
 
 * long polls the `testbot farmer` service
 * receives a job
@@ -51,9 +52,8 @@ import (
 	"github.com/wepogo/testbot/trace"
 )
 
-// We have some jobs that actually take over 45s to run,
-// so this is about as tight as we can make it right now.
-const jobTimeout = 3 * time.Minute
+// Make this as tight as we can.
+const jobTimeout = 30 * time.Second
 
 var (
 	boxID       = randID()
