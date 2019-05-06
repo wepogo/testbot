@@ -67,18 +67,6 @@ directories would be /, /a, /a/b, /d, /f, /h, and /j.
 Note in particular that merely deleting a file from a
 directory will run the tests in that directory.
 
-As a special case, an entry named "setup" will not run
-as a test on its own. Instead, it will run before every
-other test in its Testfile and the Testfile in any
-parent directory. For parent-directory Testfiles, the
-setup entry runs even if no files in the setup entry's
-directory were affected. A consequence of all this is
-there can be multiple setup tasks for a single test.
-The setup tasks run in an arbitrary order; the only
-guarantee is that they run sequentially and they all
-finish before the test starts. If any setup task fails,
-the test won't be run, and is considered to have failed.
-
 
 Test Environment
 
