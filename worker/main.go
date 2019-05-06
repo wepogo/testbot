@@ -51,7 +51,7 @@ import (
 )
 
 // Make this as tight as we can.
-const jobTimeout = 30 * time.Second
+const jobTimeout = 5 * time.Minute
 
 var (
 	boxID       = randID()
