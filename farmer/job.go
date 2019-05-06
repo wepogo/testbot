@@ -91,11 +91,6 @@ func populateJobsBG(sha string, files []string) {
 		}
 		var names []string
 		for name := range entries {
-			// Note: "setup" has special meaning and is handled in `worker/main.go`
-			// recursively for all the directories *before* each test is run.
-			if name == "setup" {
-				continue
-			}
 			names = append(names, name)
 		}
 		err = upsertJobs(ctx, sha, dir, names)

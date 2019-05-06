@@ -355,51 +355,6 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 	fmt.Fprintln(w, "setup ok", time.Since(start))
 	cmddir := path.Join(repoDir, job.Dir)
 
-	// Before we run actual tests, traverse the tree to find all `setup` tasks in all Testfiles
-	// and run these tasks first. This will guarantee, for example, that when a Go package depends
-	// on a Rust crate, that crate will be built before the tests or `go vet` would run.
-	//
-	// WARNING: We do not guarantee any particular order. If you have cross-directory
-	// dependencies you should configure your own Makefiles.
-
-	// Traverse all folders, open testfiles, read `setup` tasks and run them.
-	err = filepath.Walk(cmddir, func(fullPath string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		if info.Name() != "Testfile" {
-			return nil
-		}
-
-		testfile, err := os.Open(fullPath)
-		if err != nil {
-			return err
-		}
-		defer testfile.Close()
-
-		entries, err := testbot.ParseTestfile(testfile)
-		if err != nil {
-			return err
-		}
-
-		// Note: the "setup" key has a special meaning and is therefore ignored by the tests.
-		cmd := entries["setup"]
-
-		if cmd == "" {
-			return nil
-		}
-
-		c := prepareCommand(ctx, filepath.Dir(fullPath), w, cmd)
-		return c.Run()
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
 	// Run the actual tests:
 
 	testfile, err := os.Open(path.Join(cmddir, "Testfile"))
