@@ -273,7 +273,6 @@ type resultInfo struct {
 	Name      string
 	ElapsedMS int
 	ElapsedSp string // for display
-	TraceURL  string
 	PR        []int64
 	State     string
 	Desc      string
@@ -282,7 +281,7 @@ type resultInfo struct {
 
 func listResults(ctx context.Context, limit int) ([]resultInfo, error) {
 	const q = `
-		SELECT id, sha, dir, name, elapsed_ms, trace_url, pr, state, descr, created_at
+		SELECT id, sha, dir, name, elapsed_ms, pr, state, descr, created_at
 		FROM result
 		ORDER BY id DESC
 		LIMIT $1
@@ -292,7 +291,7 @@ func listResults(ctx context.Context, limit int) ([]resultInfo, error) {
 
 func jobResults(ctx context.Context, job testbot.Job) ([]resultInfo, error) {
 	const q = `
-		SELECT id, sha, dir, name, elapsed_ms, trace_url, pr, state, descr, created_at
+		SELECT id, sha, dir, name, elapsed_ms, pr, state, descr, created_at
 		FROM result
 		WHERE sha=$1 AND dir=$2 AND name=$3
 		ORDER BY id DESC
@@ -314,7 +313,6 @@ func scanResults(rows *sql.Rows, err error) ([]resultInfo, error) {
 			&result.Dir,
 			&result.Name,
 			&result.ElapsedMS,
-			&result.TraceURL,
 			pq.Array(&result.PR),
 			&result.State,
 			&result.Desc,

@@ -45,11 +45,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	s3pkg "github.com/aws/aws-sdk-go/service/s3"
 	"golang.org/x/xerrors"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 
 	"github.com/wepogo/testbot"
 	"github.com/wepogo/testbot/log"
-	"github.com/wepogo/testbot/trace"
 )
 
 // Make this as tight as we can.
@@ -77,9 +75,6 @@ var (
 			ExpectContinueTimeout: 1 * time.Second,
 		}}
 
-	// If compiled with -tags aws, regionS3, bucket, netlify
-	// and gitCredentials will be overwritten with the value
-	// from Parameter Store.
 	gitCredentials = os.Getenv("GIT_CREDENTIALS")
 	regionS3       = os.Getenv("S3_REGION")
 	bucket         = os.Getenv("S3_BUCKET")
@@ -137,8 +132,6 @@ func Main() {
 		)
 	}
 
-	tracer.Start(tracer.WithSampler(tracer.NewAllSampler()))
-
 	// TODO: replace credentials.AnonymousCredentials
 	s3 = s3pkg.New(session.Must(session.NewSession(
 		aws.NewConfig().WithRegion(regionS3).WithCredentials(credentials.AnonymousCredentials),
@@ -171,7 +164,7 @@ func Main() {
 func OneJob(job testbot.Job) {
 	initFilesystem()
 	ctx := context.Background()
-	cmd, _, err := startJobProc(ctx, os.Stdout, job)
+	cmd, err := startJobProc(ctx, os.Stdout, job)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, job, err)
 		os.Exit(2)
@@ -259,15 +252,6 @@ func startJob(job testbot.Job) func() {
 		return func() {}
 	}
 
-	// TODO(kr): connect to trace from farmer
-	span := tracer.StartSpan("job", tracer.ServiceName("testbot-worker"), tracer.ResourceName(job.Dir+" "+job.Name))
-	span.SetTag("job.sha", job.SHA)
-	span.SetTag("job.dir", job.Dir)
-	span.SetTag("job.name", job.Name)
-
-	jobCtx := context.Background()
-	jobCtx = tracer.ContextWithSpan(jobCtx, span)
-
 	postStatus := func(status, desc, url string) {
 		req := testbot.BoxJobUpdateReq{
 			Job:    job,
@@ -276,12 +260,12 @@ func startJob(job testbot.Job) func() {
 			URL:    url,
 		}
 		if status != "pending" {
-			defer span.Finish()
 			req.Elapsed = time.Since(start)
-			req.TraceURL = traceURL(span)
 		}
 		postJSON("/box-runstatus", req, nil)
 	}
+
+	jobCtx := context.Background()
 
 	postStatus("pending", "running", "")
 
@@ -327,7 +311,7 @@ func startJob(job testbot.Job) func() {
 	}
 
 	jobCtx, cancel := context.WithTimeout(jobCtx, jobTimeout)
-	cmd, cmdSpan, err := startJobProc(jobCtx, f, job)
+	cmd, err := startJobProc(jobCtx, f, job)
 	if err != nil {
 		cancel()
 		fmt.Fprintln(os.Stderr, job, err)
@@ -341,7 +325,6 @@ func startJob(job testbot.Job) func() {
 		defer close(done) // ok to start next job
 
 		jobErr := cmd.Wait()
-		cmdSpan.Finish()
 		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) // kill entire process group
 
 		if jobErr != nil && jobCtx.Err() != nil {
@@ -359,7 +342,7 @@ func startJob(job testbot.Job) func() {
 	return func() { cancel(); <-done }
 }
 
-func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd, tracer.Span, error) {
+func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd, error) {
 	fmt.Fprintln(w, "starting job", job)
 	fmt.Fprintln(w, "worker host", hostname)
 
@@ -368,7 +351,7 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 	err := setupJob(ctx, &setupBuf, job.SHA)
 	if err != nil {
 		w.Write(setupBuf.Bytes())
-		return nil, nil, xerrors.Errorf("clone: %w", err)
+		return nil, xerrors.Errorf("clone: %w", err)
 	}
 	fmt.Fprintln(w, "setup ok", time.Since(start))
 	cmddir := path.Join(repoDir, job.Dir)
@@ -415,36 +398,31 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Run the actual tests:
 
 	testfile, err := os.Open(path.Join(cmddir, "Testfile"))
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	defer testfile.Close()
 
 	entries, err := testbot.ParseTestfile(testfile)
 	if err != nil {
 		fmt.Fprintf(w, "parse %s: %v\n", testfile.Name(), err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	cmd, ok := entries[job.Name]
 	if !ok {
 		fmt.Fprintln(w, "cannot find Testfile entry", job.Name)
-		return nil, nil, xerrors.Errorf("cannot find Testfile entry %s", job.Name)
+		return nil, xerrors.Errorf("cannot find Testfile entry %s", job.Name)
 	}
 
-	span, ctx := tracer.StartSpanFromContext(ctx, "runtest")
-	span.SetTag("cmd", cmd)
-	span.SetTag("dir", cmddir)
-	// no span.Finish() call here, that happens in startJob
-
 	c := prepareCommand(ctx, cmddir, w, cmd)
-	return c, span, c.Start()
+	return c, c.Start()
 }
 
 func prepareCommand(ctx context.Context, dir string, w io.Writer, cmd string) *exec.Cmd {
@@ -456,7 +434,6 @@ func prepareCommand(ctx context.Context, dir string, w io.Writer, cmd string) *e
 		"NETLIFY_AUTH_TOKEN="+netlify,
 		"PATH="+binDir+":"+repoDir+"/bin:"+os.Getenv("PATH"),
 	)
-	c.Env = append(c.Env, trace.EnvironmentFor(ctx)...)
 	c.Dir = dir
 	fmt.Fprintln(w, "cd", c.Dir)
 	fmt.Fprintln(w, cmd)
@@ -522,9 +499,6 @@ func must(err error) {
 }
 
 func setupJob(ctx context.Context, w io.Writer, sha string) error {
-	span, ctx := tracer.StartSpanFromContext(ctx, "setup")
-	defer span.Finish()
-
 	// Make sure we have sha in the local clone.
 	if !objectExists(ctx, w, sha) {
 		err := runIn(ctx, repoDir, command(ctx, w, "git", "fetch"))
@@ -556,14 +530,8 @@ func objectExists(ctx context.Context, w io.Writer, sha string) bool {
 }
 
 func runIn(ctx context.Context, dir string, c *exec.Cmd) error {
-	span, _ := tracer.StartSpanFromContext(ctx, "run")
-	defer span.Finish()
-
 	c.Dir = dir
 	logCmd(c)
-	span.SetTag("path", c.Path)
-	span.SetTag("args", fmt.Sprintf("%q", c.Args))
-	span.SetTag("dir", c.Dir)
 
 	return c.Run()
 }
@@ -660,9 +628,4 @@ func isCur(f *os.File) bool {
 	curMu.Lock()
 	defer curMu.Unlock()
 	return curOut == f.Name()
-}
-
-func traceURL(span tracer.Span) string {
-	const f = "https://app.datadoghq.com/apm/trace/%d?spanID=%d"
-	return fmt.Sprintf(f, span.Context().TraceID(), span.Context().SpanID())
 }

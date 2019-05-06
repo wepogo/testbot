@@ -463,7 +463,7 @@ func boxRunStatus(ctx context.Context, req testbot.BoxJobUpdateReq) error {
 	case "pending":
 		return postPendingStatus(ctx, req.Job, req.Desc)
 	default:
-		return markDone(ctx, req.Job, req.Status, req.Desc, req.URL, req.TraceURL, req.Elapsed)
+		return markDone(ctx, req.Job, req.Status, req.Desc, req.URL, req.Elapsed)
 	}
 }
 
@@ -487,7 +487,7 @@ func cancel(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	err := markDone(req.Context(), rr.Job, "error", "canceled by operator", "", "", 0)
+	err := markDone(req.Context(), rr.Job, "error", "canceled by operator", "", 0)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -495,7 +495,7 @@ func cancel(w http.ResponseWriter, req *http.Request) {
 }
 
 // state must be one of: error, failure, pending, success
-func markDone(ctx context.Context, job testbot.Job, state, desc, url, traceURL string, elapsed time.Duration) error {
+func markDone(ctx context.Context, job testbot.Job, state, desc, url string, elapsed time.Duration) error {
 	const q = `
 		WITH done AS (
 			DELETE FROM job
@@ -507,11 +507,11 @@ func markDone(ctx context.Context, job testbot.Job, state, desc, url, traceURL s
 			FROM done JOIN pr ON (done.sha=pr.head)
 			GROUP BY sha, dir, name
 		)
-		INSERT INTO result (sha, dir, name, pr, state, descr, url, elapsed_ms, trace_url)
-		SELECT sha, dir, name, prnum, $4, $5, $6, $7, $8 FROM donepr
+		INSERT INTO result (sha, dir, name, pr, state, descr, url, elapsed_ms)
+		SELECT sha, dir, name, prnum, $4, $5, $6, $7 FROM donepr
 	`
 	ms := int(elapsed / time.Millisecond)
-	_, err := db.ExecContext(ctx, q, job.SHA, job.Dir, job.Name, state, desc, url, ms, traceURL)
+	_, err := db.ExecContext(ctx, q, job.SHA, job.Dir, job.Name, state, desc, url, ms)
 	return err
 }
 

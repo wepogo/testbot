@@ -21,7 +21,7 @@ var page = template.Must(template.New("page").Funcs(funcMap).Parse(`
 >
 {{- reltime .CreatedAt | printf "%8s" -}}
 </time> <a href=https://testbot.seqint.com/result/{{.ID}}>{{.ID}}</a>
-{{- .ElapsedSp}} <a href={{.TraceURL}}>{{.ElapsedMS}}ms</a>
+{{- .ElapsedSp}} {{.ElapsedMS}}ms
 {{- if eq .State "success"}} ok   {{else}} <b>fail</b> {{end -}}
 {{- range .PR -}}
 <a href=https://github.com/{{$.Org}}/{{$.Repo}}/pull/{{.}}>{{.}}</a> {{end -}}

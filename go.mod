@@ -6,8 +6,9 @@ require (
 	github.com/jbowens/pqtest v0.0.0-20181205033117-08443d0bab4d
 	github.com/kr/githubauth v0.1.0
 	github.com/lib/pq v1.1.0
-	github.com/philhofer/fwd v1.0.0 // indirect
-	github.com/tinylib/msgp v1.1.0 // indirect
+	github.com/stretchr/testify v1.3.0 // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/xerrors v0.0.0-20190410155217-1f06c39b4373
-	gopkg.in/DataDog/dd-trace-go.v1 v1.12.1
+	google.golang.org/appengine v1.5.0 // indirect
 )

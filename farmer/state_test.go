@@ -22,7 +22,7 @@ func TestSchema(t *testing.T) {
 	checkRuns(t, run{"commit1", "/", "cmd1", "box1"})
 
 	job := testbot.Job{SHA: "commit1", Dir: "/", Name: "cmd1"}
-	must(t, markDone(ctx, job, "error", "canceled by operator", "", "", 0))
+	must(t, markDone(ctx, job, "error", "canceled by operator", "", 0))
 	checkRuns(t) // should be none
 }
 
