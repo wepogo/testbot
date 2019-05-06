@@ -46,12 +46,11 @@ type BoxState struct {
 }
 
 type BoxJobUpdateReq struct {
-	Job      Job
-	Status   string
-	Desc     string
-	URL      string
-	Elapsed  time.Duration
-	TraceURL string
+	Job     Job
+	Status  string
+	Desc    string
+	URL     string
+	Elapsed time.Duration
 }
 
 type RetryReq struct {

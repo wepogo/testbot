@@ -120,7 +120,6 @@ CREATE TABLE result (
 	dir text NOT NULL,
 	name text NOT NULL,
 	elapsed_ms int NOT NULL,
-	trace_url text NOT NULL,
 	pr int[] NOT NULL,
 	state text NOT NULL, -- error, failure, pending, or success
 	descr text NOT NULL, -- any extra info, shows up in GH web UI
