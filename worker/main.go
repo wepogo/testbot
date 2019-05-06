@@ -265,8 +265,6 @@ func startJob(job testbot.Job) func() {
 		postJSON("/box-runstatus", req, nil)
 	}
 
-	jobCtx := context.Background()
-
 	postStatus("pending", "running", "")
 
 	f, err := os.Create(path.Join(outDir, outputFile(job)))
@@ -310,6 +308,7 @@ func startJob(job testbot.Job) func() {
 		postStatus(status, desc, u)
 	}
 
+	jobCtx := context.Background()
 	jobCtx, cancel := context.WithTimeout(jobCtx, jobTimeout)
 	cmd, err := startJobProc(jobCtx, f, job)
 	if err != nil {
