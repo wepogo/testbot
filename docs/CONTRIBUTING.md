@@ -1,9 +1,9 @@
 # Contributing
 
-Install binaries:
+Install binary:
 
 ```
-go install github.com/wepogo/testbot/cmd/testbot
+go install ./cmd/testbot
 ```
 
 Create database:
@@ -40,6 +40,8 @@ In another shell, start a worker process:
 FARMER_URL=http://localhost:1994 \
 GITHUB_ORG=wepogo \
 GITHUB_REPO=citest \
+S3_BUCKET=pogo-testbot-logs \
+S3_REGION=us-west-2 \
 testbot worker
 ```
 
