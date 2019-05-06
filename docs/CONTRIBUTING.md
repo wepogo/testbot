@@ -30,7 +30,7 @@ FARMER_URL=https://changeme.ngrok.io/ \
 GITHUB_ORG=wepogo \
 GITHUB_REPO=citest \
 GITHUB_TOKEN=changeme \
-HOOK_SECRET=changeme \
+HOOK_SECRET=$(hexdump -n 4 -e '4/4 "%08X" 1 "\n"' /dev/random) \
 testbot farmer
 ```
 
