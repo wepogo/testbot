@@ -273,6 +273,8 @@ type resultInfo struct {
 	Name      string
 	ElapsedMS int
 	ElapsedSp string // for display
+	Org       string
+	Repo      string
 	PR        []int64
 	State     string
 	Desc      string
@@ -322,6 +324,8 @@ func scanResults(rows *sql.Rows, err error) ([]resultInfo, error) {
 			return nil, err
 		}
 		result.ElapsedSp = pad(strconv.Itoa(result.ElapsedMS))
+		result.Org = org
+		result.Repo = repo
 		res = append(res, result)
 	}
 	return res, rows.Err()

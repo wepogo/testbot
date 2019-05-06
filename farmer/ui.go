@@ -20,18 +20,22 @@ var page = template.Must(template.New("page").Funcs(funcMap).Parse(`
   title={{.CreatedAt.Local.Format "2006-01-02T15:04:05.000Z07:00"}}
 >
 {{- reltime .CreatedAt | printf "%8s" -}}
-</time> <a href={{$.BaseURL}}/result/{{.ID}}>{{.ID}}</a>
+</time> <a href=/result/{{.ID}}>result</a>
 {{- .ElapsedSp}} {{.ElapsedMS}}ms
-{{- if eq .State "success"}} ok   {{else}} <b>fail</b> {{end -}}
+{{- if eq .State "success"}} ok {{else}} <b>fail</b> {{end -}}
+{{- $org := .Org }}
+{{- $repo := .Repo }}
 {{- range .PR -}}
-<a href=https://github.com/{{$.Org}}/{{$.Repo}}/pull/{{.}}>{{.}}</a> {{end -}}
+<a href=https://github.com/{{$org}}/{{$repo}}/pull/{{.}}>#{{.}}</a> {{end -}}
 {{- printf "%.8s" .SHA}} {{.Dir}} {{.Name -}}
 {{- if eq .State "success"}}{{else}} <b>{{.Desc}}</b>{{end -}}
 {{- end -}}
 
 {{- define "prlist" -}}
+{{- $org := .Org }}
+{{- $repo := .Repo }}
 {{range .PR -}}
-<a href="https://github.com/{{$.Org}}/{{$.Repo}}/pull/{{.}}">https://github.com/{{$.Org}}/{{$.Repo}}/pull/{{.}}</a>
+<a href="https://github.com/{{$org}}/{{$repo}}/pull/{{.}}">https://github.com/{{$org}}/{{$repo}}/pull/{{.}}</a>
 {{end}}
 {{- end -}}
 

@@ -101,7 +101,6 @@ func or(v, d string) string {
 }
 
 var (
-	// TODO(tmaher): move secrets into EC2 parameter store.
 	baseURLStr  = os.Getenv("FARMER_URL")
 	dumpReqsStr = os.Getenv("DUMP")
 	dbURL       = os.Getenv("DATABASE_URL")
@@ -240,9 +239,8 @@ func index(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var v struct {
-		BaseURL string
-		Boxes   []box
-		ErrBox  error
+		Boxes  []box
+		ErrBox error
 
 		Jobs   []testbot.Job
 		ErrJob error
@@ -257,7 +255,6 @@ func index(w http.ResponseWriter, req *http.Request) {
 	v.States = allStates
 	mu.Unlock()
 
-	v.BaseURL = baseURLStr
 	v.Boxes, v.ErrBox = listBoxes(req.Context())
 	v.Jobs, v.ErrJob = listJobs(req.Context())
 	v.Results, v.ErrResult = listResults(req.Context(), 200)
@@ -292,12 +289,11 @@ func result(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Language", "en")
 	data := struct {
-		BaseURL string
-		Title   string
-		PR      []int64
-		Org     string
-		Repo    string
-	}{baseURLStr, fmt.Sprintf("%.8s %s %s", sha, dir, name), pr, org, repo}
+		Title string
+		PR    []int64
+		Org   string
+		Repo  string
+	}{fmt.Sprintf("%.8s %s %s", sha, dir, name), pr, org, repo}
 	err = resultPage.Execute(w, data)
 	if err != nil {
 		log.Error(req.Context(), err, "result template") // but continue
@@ -350,22 +346,16 @@ func live(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Language", "en")
 	data := struct {
-		BaseURL string
-		Title   string
-		PR      []int64
-		Org     string
-		Repo    string
-		Live    bool
+		Title string
+		PR    []int64
+		Live  bool
 
 		Results   []resultInfo
 		ErrResult error
 	}{
-		BaseURL: baseURLStr,
-		Title:   fmt.Sprintf("%.8s %s %s", job.SHA, job.Dir, job.Name),
-		PR:      pr,
-		Org:     org,
-		Repo:    repo,
-		Live:    isLive,
+		Title: fmt.Sprintf("%.8s %s %s", job.SHA, job.Dir, job.Name),
+		PR:    pr,
+		Live:  isLive,
 	}
 
 	data.Results, data.ErrResult = jobResults(req.Context(), job)
