@@ -108,6 +108,7 @@ Deploy it to Heroku:
 
 ```
 heroku container:push testbot --recursive -r workers
+heroku container:release testbot -r workers
 ```
 
 Create a [GitHub personal access token](https://github.com/settings/tokens)
