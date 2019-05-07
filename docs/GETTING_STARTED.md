@@ -8,9 +8,10 @@ testbot consists of two services:
 * `testbot worker` is a process that runs the tests.
   See [`worker/main.go`](worker/main.go) for theory of operation.
 
-## Create a GitHub user as your bot
+## Set up a GitHub account for your bot
 
-TODO
+[Create a GitHub account](https://github.com/) for your bot.
+For example, [@impogo](https://github.com/iampogo) is ours.
 
 ## Initialize Heroku apps
 
@@ -28,18 +29,11 @@ and set it as the `farmer` Git remote:
 heroku create --remote farmer --buildpack heroku/go
 ```
 
-Create a Heroku app for testbot workers,
-set it as the `workers` Git remote,
-and add required buildpacks:
+Create a Heroku app for testbot workers and
+set it as the `workers` Git remote:
 
 ```
-heroku create --remote workers --buildpack heroku/go
-heroku buildpacks:add \
-  --remote workers \
-  --index 1 https://github.com/heroku/heroku-buildpack-ci-postgresql
-heroku buildpacks:add \
-  --remote workers \
-  --index 2 https://www.github.com/jbowens/test-buildpack
+heroku create --remote workers
 ```
 
 Set farmer URL to the newly created Heroku URL
@@ -48,14 +42,6 @@ in order for the services to communicate with each other:
 ```
 heroku config:set FARMER_URL=https://changeme.herokuapp.com -r farmer
 heroku config:set FARMER_URL=https://changeme.herokuapp.com -r workers
-```
-
-Configure Heroku to compile testbot at build time
-in order to be executed at Heroku run time:
-
-```
-heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r farmers
-heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r workers
 ```
 
 Set the GitHub organization and repository names of the repo
@@ -68,6 +54,12 @@ heroku config:set GITHUB_ORG=changeme GITHUB_REPO=changeme -r workers
 
 ## Configure and deploy farmer
 
+Configure Heroku to compile testbot:
+
+```
+heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r farmers
+```
+
 Create and initialize Postgres database:
 
 ```
@@ -75,16 +67,21 @@ heroku addons:create heroku-postgresql:hobby-dev -r farmer
 psql `heroku config:get DATABASE_URL -r farmer` < ./farmer/schema.sql
 ```
 
-Create a [GitHub personal access token](https://github.com/settings/tokens)
-with `repo`, `read:org`, and `write:repo_hook` scopes and set it:
+Under your bot's GitHub account,
+create a [GitHub personal access token](https://github.com/settings/tokens)
+with `repo`, `read:org`, and `write:repo_hook` scopes.
+Add it to the Heroku environment:
 
 ```
 heroku config:set GITHUB_TOKEN=changeme -r farmer
 ```
 
-Create a GitHub OAuth2 app in the GitHub org of the repo to be tested.
+Under your bot's GitHub account, create a
+[GitHub OAuth application](https://github.com/settings/applications/new).
 It is used for authenticating access to the farmer's web UI.
-Set its client ID and client secret in the farmer's config:
+Set its "Homepage URL" and "Authorization callback URL" the farmer URL
+(e.g. `https://changeme.herokuapp.com/`).
+Add it to the Heroku environment:
 
 ```
 heroku config:set CLIENT_ID=changeme CLIENT_SECRET=changeme -r farmer
@@ -112,11 +109,21 @@ the live test output assumes there is only one farmer.
 All of your repo's dependencies must be set up on the worker host
 in order for the worker processes to run all tests.
 
-Create a [GitHub personal access token](https://github.com/settings/tokens)
-with `repo`, `read:gpg_key`, `read:public_key`, `read:user` scopes and set it:
+Create a `Dockerfile.testbot` in your repo under test.
+Deploy it to Heroku:
 
 ```
-heroku config:set GIT_CREDENTIALS=https://username:changeme@github.com -r workers
+heroku container:push testbot --recursive -r workers
+heroku container:release testbot -r workers
+```
+
+Under your bot's GitHub account,
+create a [GitHub personal access token](https://github.com/settings/tokens)
+with `repo`, `read:gpg_key`, `read:public_key`, `read:user` scopes.
+Add it to the Heroku environment:
+
+```
+heroku config:set GIT_CREDENTIALS=https://botname:token@github.com -r workers
 ```
 
 Set S3 bucket and region:
