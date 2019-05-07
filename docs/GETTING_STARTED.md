@@ -35,13 +35,6 @@ set it as the `workers` Git remote:
 heroku create --remote workers
 ```
 
-Create a `Dockerfile.testbot` in your repo under test.
-Deploy it to Heroku:
-
-```
-heroku container:push testbot --recursive -r workers
-```
-
 Set farmer URL to the newly created Heroku URL
 in order for the services to communicate with each other:
 
@@ -59,6 +52,12 @@ heroku config:set GITHUB_ORG=changeme GITHUB_REPO=changeme -r workers
 ```
 
 ## Configure and deploy farmer
+
+Configure Heroku to compile testbot:
+
+```
+heroku config:set GO_INSTALL_PACKAGE_SPEC=./cmd/testbot -r farmers
+```
 
 Create and initialize Postgres database:
 
@@ -103,6 +102,13 @@ the live test output assumes there is only one farmer.
 
 All of your repo's dependencies must be set up on the worker host
 in order for the worker processes to run all tests.
+
+Create a `Dockerfile.testbot` in your repo under test.
+Deploy it to Heroku:
+
+```
+heroku container:push testbot --recursive -r workers
+```
 
 Create a [GitHub personal access token](https://github.com/settings/tokens)
 with `repo`, `read:gpg_key`, `read:public_key`, `read:user` scopes and set it:
