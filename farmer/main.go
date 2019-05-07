@@ -101,7 +101,6 @@ func or(v, d string) string {
 }
 
 var (
-	// TODO(tmaher): move secrets into EC2 parameter store.
 	baseURLStr  = os.Getenv("FARMER_URL")
 	dumpReqsStr = os.Getenv("DUMP")
 	dbURL       = os.Getenv("DATABASE_URL")
@@ -349,8 +348,6 @@ func live(w http.ResponseWriter, req *http.Request) {
 	data := struct {
 		Title string
 		PR    []int64
-		Org   string
-		Repo  string
 		Live  bool
 
 		Results   []resultInfo
@@ -358,8 +355,6 @@ func live(w http.ResponseWriter, req *http.Request) {
 	}{
 		Title: fmt.Sprintf("%.8s %s %s", job.SHA, job.Dir, job.Name),
 		PR:    pr,
-		Org:   org,
-		Repo:  repo,
 		Live:  isLive,
 	}
 
