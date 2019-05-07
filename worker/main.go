@@ -109,27 +109,7 @@ func Main() {
 	}
 
 	if gitCredentials != "" {
-		usr, err := user.Current()
-		if err != nil {
-			log.Fatalkv(context.Background(), log.Error, err, "at", "getting current user")
-		}
-		gitfile := usr.HomeDir + "/.git-credentials"
-
-		// write credentials to ~/.git-credentials
-		must(ioutil.WriteFile(gitfile, []byte(gitCredentials+"\n"), 0700))
-
-		// update ~/.gitconfig to be configured to use ~/.git-credentials
-		must(
-			command(
-				context.Background(),
-				os.Stdout,
-				"git",
-				"config",
-				"--global",
-				"credential.helper",
-				fmt.Sprintf("store --file %v", gitfile),
-			).Run(),
-		)
+		writeGHCreds(gitCredentials)
 	}
 
 	// TODO: replace credentials.AnonymousCredentials
@@ -157,12 +137,39 @@ func Main() {
 	}
 }
 
+func writeGHCreds(creds string) {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatalkv(context.Background(), log.Error, err, "at", "getting current user")
+	}
+	gitfile := usr.HomeDir + "/.git-credentials"
+
+	// write credentials to ~/.git-credentials
+	must(ioutil.WriteFile(gitfile, []byte(creds+"\n"), 0700))
+
+	// update ~/.gitconfig to be configured to use ~/.git-credentials
+	must(
+		command(
+			context.Background(),
+			os.Stdout,
+			"git",
+			"config",
+			"--global",
+			"credential.helper",
+			fmt.Sprintf("store --file %v", gitfile),
+		).Run(),
+	)
+}
+
 // OneJob is like main, but runs a single job
 // without registering with the farmer.
 // It writes output to stdout instead of S3.
 // It requires all the same environment as Main.
 func OneJob(job testbot.Job) {
 	initFilesystem()
+	if gitCredentials != "" {
+		writeGHCreds(gitCredentials)
+	}
 	ctx := context.Background()
 	cmd, err := startJobProc(ctx, os.Stdout, job)
 	if err != nil {
