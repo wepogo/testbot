@@ -28,12 +28,18 @@ and set it as the `farmer` Git remote:
 heroku create --remote farmer --buildpack heroku/go
 ```
 
-Create a Heroku app for testbot workers,
-set it as the `workers` Git remote,
-and add your container:
+Create a Heroku app for testbot workers and
+set it as the `workers` Git remote:
 
 ```
 heroku create --remote workers
+```
+
+Create a `Dockerfile.testbot` in your repo under test.
+Deploy it to Heroku:
+
+```
+heroku container:push testbot --recursive -r workers
 ```
 
 Set farmer URL to the newly created Heroku URL
