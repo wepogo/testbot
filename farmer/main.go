@@ -309,7 +309,6 @@ func result(w http.ResponseWriter, req *http.Request) {
 		io.WriteString(w, "sorry, no output is available for this test")
 		return
 	}
-	u = workaroundDNS(u) // TODO(kr): remove workaround
 	resp, err := httpClient.Get(u)
 	if err != nil {
 		io.WriteString(w, "fetching output: "+err.Error())
@@ -605,17 +604,6 @@ func (h dumpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		os.Stderr.Write(dump)
 	}
 	h.h.ServeHTTP(w, req)
-}
-
-// temporary workaround until we get
-// our DNS and TLS set up for S3.
-func workaroundDNS(u string) string {
-	const s = "https://farmer-ci-logs.chainaws.net/"
-	if strings.HasPrefix(u, s) {
-		// note the scheme change to HTTP (not HTTPS)
-		u = "http://farmer-ci-logs.chainaws.net.s3.amazonaws.com/" + u[len(s):]
-	}
-	return u
 }
 
 type escapeWriter struct {
