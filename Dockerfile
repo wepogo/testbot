@@ -8,6 +8,7 @@ ENV PATH=/usr/local/node-v12.1.0-linux-x64/bin:$PATH
 RUN curl https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz | tar xz -C  /usr/local
 ENV PATH=/usr/local/go/bin:$PATH
 ENV PATH=/root/go/bin:$PATH
+ENV GO111MODULE=on
 
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
@@ -22,7 +23,12 @@ RUN    echo local all all     trust > /etc/postgresql/10/main/pg_hba.conf \
     && su postgres -c 'psql -c "create database root"'
 
 WORKDIR /app
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
 ADD . /app
-RUN go get golang.org/x/tools/cmd/goimports \
+
+RUN go install golang.org/x/tools/cmd/goimports \
     && go install ./cmd/testbot
 CMD service postgresql start && /root/go/bin/testbot worker
