@@ -78,7 +78,7 @@ var (
 	netlify        = os.Getenv("NETLIFY_AUTH_TOKEN")
 
 	// Make this as tight as we can.
-	jobTimeout = parseTimeout("JOB_TIMEOUT", "60s")
+	jobTimeout = envDuration("JOB_TIMEOUT", "60s")
 
 	// Directory layout
 	rootDir = path.Join(os.Getenv("HOME"), "worker")
@@ -99,7 +99,7 @@ var (
 	curJob testbot.Job
 )
 
-func parseTimeout(key, fallback string) time.Duration {
+func envDuration(key, fallback string) time.Duration {
 	s := os.Getenv(key)
 	if s == "" {
 		s = fallback
