@@ -201,7 +201,11 @@ func pollForOutput() {
 		var job testbot.Job
 		err := postJSON("/box-livepoll", struct{ ID string }{boxID}, &job)
 		if err != nil {
-			log.Error(ctx, err)
+			// Timeouts are a normal part of operations
+			// so we don't need to log each occurrence.
+			if !isTimeout(err) {
+				log.Error(ctx, err)
+			}
 			// Normally this is a long poll, so it's good
 			// to reconnect immediately. But if there was
 			// an error, it could have happened quickly,
@@ -246,6 +250,11 @@ func getState(oldState testbot.BoxState) testbot.BoxState {
 	var newState testbot.BoxState
 	err := postJSON("/box-longpoll", oldState, &newState)
 	if err != nil {
+		// Timeouts are a normal part of operations
+		// so we don't need to log each occurrence.
+		if !isTimeout(err) {
+			log.Fatalkv(context.Background(), "error", err.Error())
+		}
 		time.Sleep(time.Second)
 		return oldState
 	}
@@ -258,7 +267,7 @@ func startJob(job testbot.Job) func() {
 		// nothing to do
 		return func() {}
 	}
-
+	fmt.Fprintln(os.Stderr, job, "begin running job")
 	postStatus := func(status, desc, url string) {
 		req := testbot.BoxJobUpdateReq{
 			Job:    job,
@@ -269,7 +278,10 @@ func startJob(job testbot.Job) func() {
 		if status != "pending" {
 			req.Elapsed = time.Since(start)
 		}
-		postJSON("/box-runstatus", req, nil)
+		err := postJSON("/box-runstatus", req, nil)
+		if err != nil {
+			log.Fatalkv(context.Background(), "error", err.Error())
+		}
 	}
 
 	postStatus("pending", "running", "")

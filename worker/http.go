@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -21,6 +22,11 @@ func (e statusError) Error() string {
 	return http.StatusText(int(e))
 }
 
+func isTimeout(oErr error) bool {
+	err, ok := oErr.(net.Error)
+	return ok && err.Timeout()
+}
+
 func postJSON(path string, in, out interface{}) error {
 	reqBody := new(bytes.Buffer)
 	json.NewEncoder(reqBody).Encode(in)
@@ -30,7 +36,6 @@ func postJSON(path string, in, out interface{}) error {
 		reqBody,
 	)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "POST "+path+" errored", err)
 		return err
 	}
 	defer resp.Body.Close()
