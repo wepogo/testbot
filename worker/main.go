@@ -267,7 +267,7 @@ func startJob(job testbot.Job) func() {
 		// nothing to do
 		return func() {}
 	}
-
+	fmt.Fprintln(os.Stderr, job, "begin running job")
 	postStatus := func(status, desc, url string) {
 		req := testbot.BoxJobUpdateReq{
 			Job:    job,
