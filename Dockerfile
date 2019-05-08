@@ -19,8 +19,8 @@ RUN apt-get install postgresql postgresql-contrib -y
 RUN echo local all all trust > /etc/postgresql/10/main/pg_hba.conf \
     && echo host all all all trust >> /etc/postgresql/10/main/pg_hba.conf \
     && service postgresql start \
-    && su postgres -c 'psql -c "create role root with superuser password null login"' \
-    && su postgres -c 'psql -c "create database root"'
+    && su postgres -c 'psql -c "create role testbot with superuser password null login"' \
+    && su postgres -c 'psql -c "create database testbot"'
 
 # Environment
 # Do this after setup so we don't have to re-download for
@@ -36,10 +36,10 @@ ENV PATH=$GOPATH/bin:$PATH
 ENV PATH=/usr/local/node-v12.1.0-linux-x64/bin:$PATH
 
 # Postgres Environment
-ENV PGUSER=root
+ENV PGUSER=testbot
 
 # Build testbot worker
-WORKDIR /root
+WORKDIR /testbot
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
