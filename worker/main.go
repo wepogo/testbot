@@ -50,9 +50,6 @@ import (
 	"github.com/wepogo/testbot/log"
 )
 
-// Make this as tight as we can.
-const jobTimeout = 30 * time.Second
-
 var (
 	boxID       = randID()
 	hostname, _ = os.Hostname()
@@ -80,6 +77,9 @@ var (
 	bucket         = os.Getenv("S3_BUCKET")
 	netlify        = os.Getenv("NETLIFY_AUTH_TOKEN")
 
+	// Make this as tight as we can.
+	jobTimeout = parseTimeout("JOB_TIMEOUT", "60s")
+
 	// Directory layout
 	rootDir = path.Join(os.Getenv("HOME"), "worker")
 	binDir  = path.Join(os.Getenv("HOME"), "bin")
@@ -98,6 +98,16 @@ var (
 	curOut string
 	curJob testbot.Job
 )
+
+func parseTimeout(key, fallback string) time.Duration {
+	s := os.Getenv(key)
+	if s == "" {
+		s = fallback
+	}
+	t, err := time.ParseDuration(s)
+	must(err)
+	return t
+}
 
 // Main registers box with farmer, waits for jobs
 func Main() {
