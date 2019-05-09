@@ -132,6 +132,14 @@ Set S3 bucket and region:
 heroku config:set S3_REGION=changeme S3_BUCKET=changeme -r workers
 ```
 
+By default, jobs time out after 60 seconds.
+To increase the timeout, set this config var to a valid
+[duration string](https://golang.org/pkg/time/#ParseDuration):
+
+```
+heroku config:set JOB_TIMEOUT=5m -r workers
+```
+
 Deploy:
 
 ```
