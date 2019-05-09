@@ -177,9 +177,9 @@ func Main() {
 
 	mux := new(http.ServeMux)
 	mux.Handle("/pr-hook", github.Hook(hookSecret, jsonHandler(prHook)))
-	mux.Handle("/box-ping", jsonHandler(boxPing))           // TODO(tmaher): add HTTP basic auth
-	mux.Handle("/box-longpoll", jsonHandler(boxLongPoll))   // TODO(tmaher): add HTTP basic auth
-	mux.Handle("/box-runstatus", jsonHandler(boxRunStatus)) // TODO(tmaher): add HTTP basic auth
+	mux.Handle("/box-ping", jsonHandler(boxPing))
+	mux.Handle("/box-longpoll", jsonHandler(boxLongPoll))
+	mux.Handle("/box-runstatus", jsonHandler(boxRunStatus))
 	mux.Handle("/box-livepoll", jsonHandler(boxLivePoll))
 	mux.HandleFunc("/box-livesend", boxLiveSend)
 	mux.Handle("/static/a.css", static("a.css", css))

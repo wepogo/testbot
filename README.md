@@ -1,20 +1,19 @@
 # testbot
 
-testbot is a free,
-open source,
-run-it-yourself
-Continuous Integration (CI) tool.
+testbot is a Continuous Integration (CI) tool
+designed for private GitHub monorepos.
 
 To run a testbot instance,
 read [Getting Started](docs/GETTING_STARTED.md).
 
 ## Why
 
-Try testbot if you want these things from your CI tool:
+Try testbot if you want to:
 
 1. start tests in < 3s after opening or editing a pull request
 2. run only the tests relevant to the change
-3. avoid leaking code, credentials, or data to a third-party CI provider
+3. control your caches
+4. avoid leaking code, credentials, or data to a third-party CI provider
 
 Common causes of slow-starting tests on hosted CI services
 are multi-tenant queues and containerization.
@@ -24,6 +23,11 @@ and containers have cache misses.
 
 If you organize your code into a [monorepo](https://www.statusok.com/monorepo),
 your pull requests often will not need to run most tests.
+
+Avoid testbot if you want to:
+
+1. run tests on an open source (public) repo
+2. prefer convenience of a hosted service over managing your own CI environment
 
 ## How it works
 

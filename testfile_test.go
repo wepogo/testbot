@@ -31,7 +31,7 @@ func TestOkNameOk(t *testing.T) {
 		"web",
 		"a",
 		"a123",
-		"123", // TODO(kr): should all-numeric be allowed?
+		"123",
 		"name_with_underscore",
 	}
 
