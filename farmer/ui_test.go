@@ -56,16 +56,17 @@ func TestPad(t *testing.T) {
 		s string
 		w int
 	}{
-		{"680", 2},
-		{"3127", 1},
-		{"33905", 0},
+		{"680", 3},
+		{"3127", 2},
+		{"33905", 1},
 		{"241471", 0},
+		{"2414713", 0},
 	}
 
 	for _, test := range cases {
 		g := len(pad(test.s))
 		if g != test.w {
-			t.Errorf("len(pad(%q, 5)) = %d, want %d", test.s, g, test.w)
+			t.Errorf("len(pad(%q)) = %d, want %d", test.s, g, test.w)
 		}
 	}
 }

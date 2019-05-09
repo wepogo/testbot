@@ -191,9 +191,9 @@ func static(name, body string) http.HandlerFunc {
 }
 
 // pad returns a string containing
-// enough spaces to pad s to length 5.
+// enough spaces to pad s to length 6.
 func pad(s string) string {
-	const sp = "     "
+	const sp = "      "
 	if len(s) >= len(sp) {
 		return ""
 	}
