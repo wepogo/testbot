@@ -11,7 +11,12 @@ testbot consists of two services:
 ## Set up a GitHub account for your bot
 
 [Create a GitHub account](https://github.com/) for your bot.
-For example, [@impogo](https://github.com/iampogo) is ours.
+For example, [@testbot](https://github.com/testbot) is ours.
+
+Add the GitHub user as an admin collaborator
+on the GitHub repo you want testbot to test.
+
+Accept the invitation to collaborate on the repo.
 
 ## Initialize Heroku apps
 
@@ -151,3 +156,45 @@ Scale as many workers as you'd like:
 ```
 heroku ps:scale workers=5 -r workers
 ```
+
+## Open a test pull request
+
+Add a `Testfile` to any directory in your repo under test:
+
+```
+test1: echo "hello"
+test2: echo "world"
+```
+
+Commit the change.
+Open a pull request.
+The tests should run immediately.
+
+A GitHub "status check" should appear for each test job.
+The status check name will be the directory name (`/` for root)
+and test job name (`test1`, `test2`).
+
+Click the "Details" link for one of the status checks.
+A GitHub OAuth authorization screen should appear.
+
+The app will not have been granted access to your organization yet.
+Click "Grant" next to the organization name for the repo under test.
+An email will be sent to the GitHub org's administrators.
+Click the link in the email to grant access to the app.
+
+Now, any time a user within in your organization
+clicks "Details" and authorizes the OAuth app,
+they will be able to see test results output.
+
+## Optional: add branch protection rule
+
+In your GitHub repo under test,
+click "Settings > Branches > Add rule".
+Use a "Branch name pattern" equal to your default branch (e.g. "master").
+
+Click "Require status checks to pass before merging".
+As you add real test jobs to your repo,
+their names will appear here.
+If you have a test job in the `Testfile` in the root of your repo,
+it will run on every pull request.
+You can mark is as "Required" here.
