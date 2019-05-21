@@ -42,6 +42,7 @@ ENV PGUSER=testbot
 WORKDIR /testbot
 COPY go.mod .
 COPY go.sum .
+RUN go install golang.org/x/tools/cmd/goimports
 RUN go mod download
 COPY . .
 RUN go install ./cmd/testbot
