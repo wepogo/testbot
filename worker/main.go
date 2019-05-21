@@ -176,10 +176,10 @@ func writeGHCreds(creds string) {
 // It writes output to stdout instead of S3.
 // It requires all the same environment as Main.
 func OneJob(job testbot.Job) {
-	initFilesystem()
 	if gitCredentials != "" {
 		writeGHCreds(gitCredentials)
 	}
+	initFilesystem()
 	ctx := context.Background()
 	cmd, err := startJobProc(ctx, os.Stdout, job)
 	if err != nil {
