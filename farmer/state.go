@@ -3,7 +3,7 @@ package farmer
 import (
 	"context"
 	"database/sql"
-	"strconv"
+	"fmt"
 	"sync"
 	"time"
 
@@ -323,7 +323,7 @@ func scanResults(rows *sql.Rows, err error) ([]resultInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		result.ElapsedSp = pad(strconv.Itoa(result.ElapsedMS))
+		result.ElapsedSp = pad(fmt.Sprintf("%v", time.Duration(result.ElapsedMS)*time.Millisecond))
 		result.Org = org
 		result.Repo = repo
 		res = append(res, result)

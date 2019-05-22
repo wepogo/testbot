@@ -74,6 +74,7 @@ import (
 	"strings"
 	"time"
 
+	// https://www.godoc.org/github.com/heroku/x/hmetrics/onload
 	_ "github.com/heroku/x/hmetrics/onload"
 	"github.com/kr/githubauth"
 	"github.com/lib/pq"
@@ -122,6 +123,7 @@ var gh = github.Open(
 )
 var httpClient = new(http.Client)
 
+// Main is the entrypoint for operation
 func Main() {
 	var err error
 	baseURL, err = url.Parse(baseURLStr)
