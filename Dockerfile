@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install build-essential git curl gnupg vim -y
 
 # Language Dependencies
 RUN curl https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz | tar xz -C  /usr/local \
-    && curl https://nodejs.org/dist/v12.1.0/node-v12.1.0-linux-x64.tar.gz | tar xz -C /usr/local \
+    && curl https://nodejs.org/dist/v12.3.1/node-v12.3.1-linux-x64.tar.gz | tar xz -C /usr/local \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
     && apt update -y \
@@ -33,7 +33,7 @@ ENV PATH=/usr/local/go/bin:$PATH
 ENV PATH=$GOPATH/bin:$PATH
 
 # Node Environment
-ENV PATH=/usr/local/node-v12.1.0-linux-x64/bin:$PATH
+ENV PATH=/usr/local/node-v12.3.1-linux-x64/bin:$PATH
 
 # Postgres Environment
 ENV PGUSER=testbot
