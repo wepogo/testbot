@@ -16,8 +16,8 @@ RUN curl https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz | tar xz -C  /usr/
 RUN apt-get install postgresql postgresql-contrib -y
 
 # Postgres Configuration
-RUN echo local all all trust > /etc/postgresql/10/main/pg_hba.conf \
-    && echo host all all all trust >> /etc/postgresql/10/main/pg_hba.conf \
+RUN echo local all all trust > /etc/postgresql/11/main/pg_hba.conf \
+    && echo host all all all trust >> /etc/postgresql/11/main/pg_hba.conf \
     && service postgresql start \
     && su postgres -c 'psql -c "create role testbot with superuser password null login"' \
     && su postgres -c 'psql -c "create database testbot"'
