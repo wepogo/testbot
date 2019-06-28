@@ -13,7 +13,10 @@ RUN curl https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz | tar xz -C  /usr/
     && apt install --no-install-recommends yarn -y
 
 # Postgres Dependencies
-RUN apt-get install postgresql postgresql-contrib -y
+RUN curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update -y \
+    && apt-get install postgresql-11 postgresql-contrib -y
 
 # Postgres Configuration
 RUN echo local all all trust > /etc/postgresql/11/main/pg_hba.conf \
