@@ -40,6 +40,7 @@ ENV PATH=/usr/local/node-v12.1.0-linux-x64/bin:$PATH
 
 # Postgres Environment
 ENV PGUSER=testbot
+VOLUME ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 # Build testbot worker
 WORKDIR /testbot
