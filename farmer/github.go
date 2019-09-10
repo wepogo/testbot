@@ -6,8 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	"golang.org/x/xerrors"
-
 	"github.com/wepogo/testbot"
 )
 
@@ -40,7 +38,7 @@ func createHook() error {
 	}
 	err := gh.Postf(data, nil, "/hub")
 	if err != nil {
-		err = xerrors.Errorf("unable to create hook. check $GITHUB_ORG [%s] or $GITHUB_REPO [%s]: %w", org, repo, err)
+		err = fmt.Errorf("unable to create hook. check $GITHUB_ORG [%s] or $GITHUB_REPO [%s]: %w", org, repo, err)
 		return err
 	}
 	return nil

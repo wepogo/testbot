@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"golang.org/x/xerrors"
 
 	"github.com/wepogo/testbot"
 	"github.com/wepogo/testbot/log"
@@ -106,7 +105,7 @@ func loadAllBoxState(ctx context.Context) error {
 	const q = `SELECT box, sha, dir, name FROM run`
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
-		return xerrors.Errorf("querying box state: %w", err)
+		return fmt.Errorf("querying box state: %w", err)
 	}
 
 	newStates := make(map[string]testbot.BoxState)
@@ -116,12 +115,12 @@ func loadAllBoxState(ctx context.Context) error {
 		var job testbot.Job
 		err = rows.Scan(&box, &job.SHA, &job.Dir, &job.Name)
 		if err != nil {
-			return xerrors.Errorf("scanning rows: %w", err)
+			return fmt.Errorf("scanning rows: %w", err)
 		}
 		newStates[box] = testbot.BoxState{ID: box, Job: job}
 	}
 	if rows.Err() != nil {
-		return xerrors.Errorf("rows.Err: %w", err)
+		return fmt.Errorf("rows.Err: %w", err)
 	}
 
 	mu.Lock()
@@ -138,7 +137,7 @@ func reportResults(ctx context.Context) error {
 	`
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
-		return xerrors.Errorf("querying unreported results: %w", err)
+		return fmt.Errorf("querying unreported results: %w", err)
 	}
 	defer rows.Close()
 
@@ -149,7 +148,7 @@ func reportResults(ctx context.Context) error {
 		var job testbot.Job
 		err = rows.Scan(&id, &job.SHA, &job.Dir, &job.Name, &state, &desc)
 		if err != nil {
-			return xerrors.Errorf("scanning: %w", err)
+			return fmt.Errorf("scanning: %w", err)
 		}
 		err := postStatus(ctx, job, state, desc, selfURLf("result/%d", id))
 		if err != nil {
@@ -159,7 +158,7 @@ func reportResults(ctx context.Context) error {
 		reported = append(reported, id)
 	}
 	if rows.Err() != nil {
-		return xerrors.Errorf("rows.Err: %w", err)
+		return fmt.Errorf("rows.Err: %w", err)
 	}
 
 	q = `
@@ -168,7 +167,7 @@ func reportResults(ctx context.Context) error {
 	`
 	_, err = db.ExecContext(ctx, q, pq.Array(reported))
 	if err != nil {
-		return xerrors.Errorf("updating result as reported: %w", err)
+		return fmt.Errorf("updating result as reported: %w", err)
 	}
 	return nil
 }

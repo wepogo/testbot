@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"golang.org/x/xerrors"
 )
 
 // context key type
@@ -115,7 +113,7 @@ func Printf(ctx context.Context, format string, a ...interface{}) {
 func Error(ctx context.Context, err error, a ...interface{}) {
 	Helper()
 	if len(a) > 0 {
-		err = xerrors.Errorf("%s: %s", fmt.Sprint(a...), err)
+		err = fmt.Errorf("%s: %s", fmt.Sprint(a...), err)
 	}
 	Printkv(ctx, KeyError, err)
 }
