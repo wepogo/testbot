@@ -9,6 +9,7 @@ require (
 	github.com/stretchr/testify v1.3.0 // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/xerrors v0.0.0-20190410155217-1f06c39b4373
 	google.golang.org/appengine v1.5.0 // indirect
 )
+
+go 1.13

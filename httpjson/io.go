@@ -3,11 +3,10 @@ package httpjson
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
-
-	"golang.org/x/xerrors"
 
 	"github.com/wepogo/testbot/log"
 )
@@ -20,7 +19,7 @@ func Read(r io.Reader, v interface{}) error {
 	dec.UseNumber()
 	err := dec.Decode(v)
 	if err != nil {
-		return xerrors.Errorf("bad request: %w", err)
+		return fmt.Errorf("bad request: %w", err)
 	}
 	return err
 }

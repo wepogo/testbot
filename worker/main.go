@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,7 +45,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	s3pkg "github.com/aws/aws-sdk-go/service/s3"
-	"golang.org/x/xerrors"
 
 	"github.com/wepogo/testbot"
 	"github.com/wepogo/testbot/log"
@@ -379,7 +379,7 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 	err := setupJob(ctx, &setupBuf, job.SHA)
 	if err != nil {
 		w.Write(setupBuf.Bytes())
-		return nil, xerrors.Errorf("clone: %w", err)
+		return nil, fmt.Errorf("clone: %w", err)
 	}
 	fmt.Fprintln(w, "setup ok", time.Since(start))
 	cmddir := path.Join(repoDir, job.Dir)
@@ -401,7 +401,7 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 	cmd, ok := entries[job.Name]
 	if !ok {
 		fmt.Fprintln(w, "cannot find Testfile entry", job.Name)
-		return nil, xerrors.Errorf("cannot find Testfile entry %s", job.Name)
+		return nil, fmt.Errorf("cannot find Testfile entry %s", job.Name)
 	}
 
 	c := prepareCommand(ctx, cmddir, w, cmd)
@@ -454,7 +454,7 @@ func getOutput(j testbot.Job) (*os.File, error) {
 	curMu.Lock()
 	if curJob != j {
 		curMu.Unlock()
-		return nil, xerrors.New("not found")
+		return nil, errors.New("not found")
 	}
 	name := curOut
 	curMu.Unlock()

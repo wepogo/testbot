@@ -2,18 +2,17 @@ package httpjson
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
 	"testing/iotest"
-
-	"golang.org/x/xerrors"
 )
 
 func TestHandler(t *testing.T) {
-	errX := xerrors.New("x")
+	errX := errors.New("x")
 
 	cases := []struct {
 		rawQuery string

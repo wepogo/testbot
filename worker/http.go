@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	s3pkg "github.com/aws/aws-sdk-go/service/s3"
-	"golang.org/x/xerrors"
 )
 
 var textPlainUTF8 = "text/plain; charset=utf-8"
@@ -63,7 +62,7 @@ func uploadToS3(f *os.File) (url string, err error) {
 		ContentType: &textPlainUTF8,
 	})
 	if err != nil {
-		return "", xerrors.Errorf("bucket : %w", err)
+		return "", fmt.Errorf("bucket : %w", err)
 	}
 
 	return "https://" + bucket + ".s3.amazonaws.com/" + key, nil

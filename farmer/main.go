@@ -78,7 +78,6 @@ import (
 	_ "github.com/heroku/x/hmetrics/onload"
 	"github.com/kr/githubauth"
 	"github.com/lib/pq"
-	"golang.org/x/xerrors"
 
 	"github.com/wepogo/testbot"
 	"github.com/wepogo/testbot/farmer/stream"
@@ -435,7 +434,7 @@ func boxPing(ctx context.Context, p testbot.BoxPingReq) error {
 	`
 	_, err := db.ExecContext(ctx, q, p.ID, p.Host)
 	if err != nil {
-		return xerrors.Errorf("insert box: %s", err)
+		return fmt.Errorf("insert box: %s", err)
 	}
 	return nil
 }
