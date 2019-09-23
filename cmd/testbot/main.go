@@ -39,12 +39,12 @@ const usageString = `usage:
   testbot worker
   testbot onejob [sha] [dir] [name]
 
-For onejob, sha is a git commit hash, dir is the location
-of a Testfile relative to $I10R, and name is the name
-of an entry in the Testfile.
+For onejob, sha is a Git commit hash,
+dir is the path to a Testfile relative to repo root,
+and name is the name of an entry in the Testfile.
 
 Example:
-  $ testbot onejob e3e9378da testbot gotest
+  $ testbot onejob e3e9378da subdir gotest
 `
 
 var needArgs = map[string]int{"farmer": 2, "worker": 2, "onejob": 5}
