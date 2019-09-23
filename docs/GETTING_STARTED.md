@@ -134,7 +134,12 @@ heroku config:set GIT_CREDENTIALS=https://botname:token@github.com -r workers
 Set S3 bucket and region:
 
 ```
-heroku config:set S3_REGION=changeme S3_BUCKET=changeme -r workers
+heroku config:set \
+    AWS_REGION=changeme \
+    AWS_ACCESS_KEY_ID=changeme \
+    AWS_SECRET_ACCESS_KEY=changeme \
+    S3_BUCKET=changeme \
+-r workers
 ```
 
 By default, jobs time out after 60 seconds.
