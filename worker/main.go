@@ -41,8 +41,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	s3pkg "github.com/aws/aws-sdk-go/service/s3"
 
@@ -73,7 +71,6 @@ var (
 		}}
 
 	gitCredentials = os.Getenv("GIT_CREDENTIALS")
-	regionS3       = os.Getenv("S3_REGION")
 	bucket         = os.Getenv("S3_BUCKET")
 	netlify        = os.Getenv("NETLIFY_AUTH_TOKEN")
 
@@ -92,7 +89,9 @@ var (
 		Host: hostname,
 	}
 
-	s3 *s3pkg.S3
+	// Reads $AWS_REGION, $AWS_ACCESS_KEY_ID, and $AWS_SECRET_ACCESS_KEY
+	// from environment variables.
+	s3 = s3pkg.New(session.Must(session.NewSession()))
 
 	curMu  sync.Mutex
 	curOut string
@@ -121,11 +120,6 @@ func Main() {
 	if gitCredentials != "" {
 		writeGHCreds(gitCredentials)
 	}
-
-	// TODO: replace credentials.AnonymousCredentials
-	s3 = s3pkg.New(session.Must(session.NewSession(
-		aws.NewConfig().WithRegion(regionS3).WithCredentials(credentials.AnonymousCredentials),
-	)))
 
 	initFilesystem()
 
