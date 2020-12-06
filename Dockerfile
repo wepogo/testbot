@@ -30,10 +30,7 @@ RUN echo local all all trust > /etc/postgresql/11/main/pg_hba.conf \
 # minor changes.
 
 # Go Environment
-ENV GO111MODULE=on
-ENV GOPATH=/go
 ENV PATH=/usr/local/go/bin:$PATH
-ENV PATH=$GOPATH/bin:$PATH
 
 # Node Environment
 ENV PATH=/usr/local/node-v12.1.0-linux-x64/bin:$PATH
@@ -47,6 +44,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
+RUN go install golang.org/x/tools/cmd/goimports
 RUN go install ./cmd/testbot
 
 CMD service postgresql start && testbot worker
