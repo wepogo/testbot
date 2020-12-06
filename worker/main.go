@@ -318,7 +318,7 @@ func startJob(job testbot.Job) func() {
 		f.Seek(0, 0)
 		if s := scanError(f); s != "" && status != "success" {
 			s = strings.Replace(s, cmddir+"/", "", -1)
-			s = strings.Replace(s, repoDir+"/", "$I10R/", -1)
+			s = strings.Replace(s, repoDir+"/", "$POGO/", -1)
 			desc += ": " + s
 		}
 		f.Seek(0, 0)
@@ -405,8 +405,7 @@ func startJobProc(ctx context.Context, w io.Writer, job testbot.Job) (*exec.Cmd,
 func prepareCommand(ctx context.Context, dir string, w io.Writer, cmd string) *exec.Cmd {
 	c := command(ctx, w, "/bin/bash", "-eo", "pipefail", "-c", cmd)
 	c.Env = append(os.Environ(),
-		"CHAIN="+repoDir,
-		"I10R="+repoDir,
+		"POGO="+repoDir,
 		"GOBIN="+binDir,
 		"NETLIFY_AUTH_TOKEN="+netlify,
 		"PATH="+binDir+":"+repoDir+"/bin:"+os.Getenv("PATH"),

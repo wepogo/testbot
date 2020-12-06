@@ -40,7 +40,7 @@ const usageString = `usage:
   testbot onejob [sha] [dir] [name]
 
 For onejob, sha is a git commit hash, dir is the location
-of a Testfile relative to $I10R, and name is the name
+of a Testfile relative to $POGO, and name is the name
 of an entry in the Testfile.
 
 Example:
